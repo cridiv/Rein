@@ -77,16 +77,16 @@ const Navbar = () => {
     <nav className="h-16 bg-card border-b border-border px-4 sm:px-6 flex items-center justify-between">
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 cursor-pointer">
-        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+        <div className="w-8 h-8 bg-transparent rounded-lg flex items-center justify-center">
           <Image
             src="/rein-logo.png"
-            className="rounded-lg"
+            className="rounded-md"
             alt="Rein Logo"
             width={24}
             height={24}
           />
         </div>
-        <h1 className="text-foreground font-semibold text-lg hidden sm:block">
+        <h1 className="text-foreground font-semibold text-xl hidden sm:block">
           <span className="text-primary">Rein</span>
         </h1>
       </Link>
@@ -113,11 +113,11 @@ const Navbar = () => {
           <span className="text-foreground text-sm font-medium hidden sm:inline">
             Integrations
           </span>
-          {connectedCount > 0 && (
+          {/* {connectedCount > 0 && (
             <span className="bg-primary text-primary-foreground text-xs font-semibold px-1.5 py-0.5 rounded-full">
               {connectedCount}
             </span>
-          )}
+          )} */}
           <svg
             className={`w-4 h-4 text-muted-foreground transition-transform duration-150 ${
               isDropdownOpen ? "rotate-180" : ""
