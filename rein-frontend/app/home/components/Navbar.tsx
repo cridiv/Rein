@@ -1,0 +1,261 @@
+"use client";
+import React, { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+
+interface Integration {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  connected: boolean;
+}
+
+const Navbar = () => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [integrations, setIntegrations] = useState<Integration[]>([
+    {
+      id: "github",
+      name: "GitHub",
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+          />
+        </svg>
+      ),
+      connected: false,
+    },
+    {
+      id: "calendar",
+      name: "Google Calendar",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+      ),
+      connected: false,
+    },
+    {
+      id: "slack",
+      name: "Slack",
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z" />
+        </svg>
+      ),
+      connected: false,
+    },
+  ]);
+
+  const handleConnect = (id: string) => {
+    // TODO: Implement actual OAuth flow for each integration
+    console.log(`Connecting to ${id}...`);
+    setIntegrations((prev) =>
+      prev.map((integration) =>
+        integration.id === id
+          ? { ...integration, connected: !integration.connected }
+          : integration,
+      ),
+    );
+  };
+
+  const connectedCount = integrations.filter((i) => i.connected).length;
+
+  return (
+    <nav className="h-16 bg-card border-b border-border px-4 sm:px-6 flex items-center justify-between">
+      {/* Logo */}
+      <Link href="/" className="flex items-center gap-2 cursor-pointer">
+        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+          <Image
+            src="/rein-logo.png"
+            className="rounded-lg"
+            alt="Rein Logo"
+            width={24}
+            height={24}
+          />
+        </div>
+        <h1 className="text-foreground font-semibold text-lg hidden sm:block">
+          <span className="text-primary">Rein</span>
+        </h1>
+      </Link>
+
+      {/* Center: Integrations Dropdown */}
+      <div className="relative">
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 border border-border hover:border-primary rounded-lg transition-all duration-150 cursor-pointer"
+        >
+          <svg
+            className="w-4 h-4 text-primary"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+            />
+          </svg>
+          <span className="text-foreground text-sm font-medium hidden sm:inline">
+            Integrations
+          </span>
+          {connectedCount > 0 && (
+            <span className="bg-primary text-primary-foreground text-xs font-semibold px-1.5 py-0.5 rounded-full">
+              {connectedCount}
+            </span>
+          )}
+          <svg
+            className={`w-4 h-4 text-muted-foreground transition-transform duration-150 ${
+              isDropdownOpen ? "rotate-180" : ""
+            }`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+
+        {/* Dropdown Menu */}
+        {isDropdownOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setIsDropdownOpen(false)}
+            />
+
+            {/* Dropdown Content */}
+            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0 w-64 bg-card border-2 border-border rounded-lg shadow-lg z-20 overflow-hidden">
+              <div className="px-4 py-3 border-b border-border">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                  Connect Apps
+                </p>
+              </div>
+
+              <div className="py-2">
+                {integrations.map((integration) => (
+                  <button
+                    key={integration.id}
+                    onClick={() => handleConnect(integration.id)}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-secondary transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`${
+                          integration.connected
+                            ? "text-primary"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {integration.icon}
+                      </div>
+                      <span className="text-foreground text-sm">
+                        {integration.name}
+                      </span>
+                    </div>
+                    {integration.connected ? (
+                      <span className="flex items-center gap-1 text-xs text-primary font-medium">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        Connected
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        Connect
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Right: User Profile */}
+      <div className="flex items-center gap-3">
+        {/* Notifications (optional) */}
+        <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors cursor-pointer hidden sm:flex">
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
+        </button>
+
+        {/* User Avatar */}
+        <button className="flex items-center gap-2 p-1.5 hover:bg-secondary rounded-lg transition-colors cursor-pointer">
+          <div className="w-8 h-8 bg-secondary border-2 border-border rounded-full flex items-center justify-center">
+            <svg
+              className="w-4 h-4 text-muted-foreground"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+          </div>
+          <svg
+            className="w-4 h-4 text-muted-foreground hidden sm:block"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;
