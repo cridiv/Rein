@@ -7,6 +7,8 @@ const PromptInput = () => {
   const router = useRouter();
   const [value, setValue] = useState("");
   const [isPlanMode, setIsPlanMode] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -19,7 +21,7 @@ const PromptInput = () => {
   }, [value]);
 
   const handleSubmit = () => {
-    if (!value.trim()) return;
+    if (!value.trim() || isEnhancing) return;
 
     // TODO: Pass the prompt to the chat page
     console.log("Submitting prompt:", value);
@@ -38,8 +40,20 @@ const PromptInput = () => {
     }
   };
 
-  const handleEnhancePrompt = () => {
-    console.log("Prompt enhanced");
+  const handleEnhancePrompt = async () => {
+    if (!value.trim() || isEnhancing) return;
+
+    setIsEnhancing(true);
+
+    // TODO: Call AI API to enhance the prompt
+    // Simulating API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // Mock enhancement - in production, this would come from the API
+    const enhanced = `${value}\n\nEnhanced with: specific timeline, measurable goals, and actionable steps.`;
+    setValue(enhanced);
+
+    setIsEnhancing(false);
   };
 
   return (
@@ -62,16 +76,50 @@ const PromptInput = () => {
 
           {/* Bottom Actions Bar */}
           <div className="flex justify-between items-center text-sm px-3 pb-3 pt-2 gap-2">
-            {/* Left Side - Attach Button */}
-            <div className="flex gap-1 items-center min-w-0 shrink">
+            {/* Left Side - Enhance Button */}
+            <div className="flex gap-1 items-center min-w-0 shrink relative">
               <button
                 onClick={handleEnhancePrompt}
-                aria-label="Enhance prompt"
-                className="flex items-center justify-center shrink-0 size-8 text-muted-foreground hover:text-foreground bg-secondary hover:bg-secondary/80 rounded-full transition-colors cursor-pointer"
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+                disabled={!value.trim() || isEnhancing}
+                aria-label="Enhance prompt with AI"
+                className="flex items-center justify-center shrink-0 size-8 text-muted-foreground hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed bg-secondary hover:bg-secondary/80 disabled:hover:bg-secondary rounded-full transition-colors cursor-pointer relative"
                 type="button"
               >
-                <Sparkles className="w-4 h-4" />
+                {isEnhancing ? (
+                  <svg
+                    className="w-4 h-4 animate-spin text-primary"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
               </button>
+
+              {/* Tooltip */}
+              {showTooltip && !isEnhancing && value.trim() && (
+                <div className="absolute bottom-full left-0 mb-2 px-3 py-1.5 bg-card border border-border rounded-lg shadow-lg whitespace-nowrap z-50 animate-in fade-in slide-in-from-bottom-1 duration-200">
+                  <p className="text-xs text-foreground">Enhance with AI</p>
+                  <div className="absolute top-full left-4 -translate-x-1/2 border-4 border-transparent border-t-border"></div>
+                  <div className="absolute top-full left-4 -translate-x-1/2 -mt-px border-4 border-transparent border-t-card"></div>
+                </div>
+              )}
             </div>
 
             {/* Spacer */}
@@ -109,11 +157,13 @@ const PromptInput = () => {
               {/* Build Now Button */}
               <button
                 onClick={handleSubmit}
-                disabled={!value.trim()}
+                disabled={!value.trim() || isEnhancing}
                 className="flex justify-center items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-50 shrink-0 px-4 h-9 text-sm font-medium cursor-pointer"
                 aria-label="Send message"
               >
-                <span className="hidden sm:inline">Execute now</span>
+                <span className="hidden sm:inline">
+                  {isEnhancing ? "Enhancing..." : "Execute now"}
+                </span>
                 <svg
                   className="w-4 h-4"
                   xmlns="http://www.w3.org/2000/svg"
@@ -125,6 +175,21 @@ const PromptInput = () => {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div>
+        {/* Suggestion pills */}
+        <div className="flex flex-wrap justify-center gap-2 mt-6 mb-8">
+          <span className="px-3 py-1.5 bg-secondary text-sm rounded-full cursor-pointer brutal-shadow-sm brutal-shadow-hover transition">
+            Plan a trip to Japan
+          </span>
+          <span className="px-3 py-1.5 bg-secondary text-sm rounded-full cursor-pointer brutal-shadow-sm brutal-shadow-hover transition">
+            Start a blog
+          </span>
+          <span className="px-3 py-1.5 bg-secondary text-sm rounded-full cursor-pointer brutal-shadow-sm brutal-shadow-hover transition">
+            Learn guitar
+          </span>
         </div>
       </div>
     </div>

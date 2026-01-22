@@ -34,21 +34,6 @@ const Home = () => {
           <div className="w-full mt-6 sm:mt-10">
             <PromptInput />
           </div>
-
-          <div>
-            {/* Suggestion pills */}
-            <div className="flex flex-wrap justify-center gap-2 mt-4">
-              <span className="px-3 py-1.5 bg-secondary text-sm rounded-full cursor-pointer hover:bg-secondary/80 transition">
-                Plan a trip to Japan
-              </span>
-              <span className="px-3 py-1.5 bg-secondary text-sm rounded-full cursor-pointer hover:bg-secondary/80 transition">
-                Start a blog
-              </span>
-              <span className="px-3 py-1.5 bg-secondary text-sm rounded-full cursor-pointer hover:bg-secondary/80 transition">
-                Learn guitar
-              </span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
