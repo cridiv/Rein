@@ -15,13 +15,6 @@ Unlike traditional AI planners that stop at generating advice, Rein:
 - ✅ **Uses Opik to systematically evaluate and improve AI quality**
 - ✅ Tracks progress through streaks and completion metrics
 
-### Hackathon Categories
-
-- **Primary**: Productivity & Work Habits ($5,000)
-- **Secondary**: Best Use of Opik ($5,000)
-
----
-
 ## 🏗️ System Architecture
 
 ### Tech Stack
