@@ -5,12 +5,23 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle2, Loader2, Play, Terminal } from "lucide-react";
+import {
+  CheckCircle2,
+  Loader2,
+  Play,
+  Terminal,
+  Plus,
+  ArrowUp,
+  Lightbulb,
+  ChevronDown,
+  MoreHorizontal,
+  Sparkles,
+} from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  actionsTaken?: number;
 }
 
 export default function ChatPage() {
@@ -21,6 +32,8 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // This state represents the "Work in Progress" for Opik evaluations
   const [auditStats, setAuditStats] = useState({
@@ -29,7 +42,18 @@ export default function ChatPage() {
     platformReady: false,
   });
 
-  const scrollRef = useRef<HTMLDivElement>(null);
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "80px";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 400)}px`;
+    }
+  }, [userInput]);
 
   // 1. Initial Analysis on Load
   useEffect(() => {
@@ -40,7 +64,6 @@ export default function ChatPage() {
 
   const handleInitialAnalysis = async (prompt: string) => {
     setIsProcessing(true);
-    // TODO: Connect to NestJS Agent: /api/agents/analyze
     setMessages([{ role: "user", content: prompt }]);
 
     // Simulate Agent Reasoning
@@ -50,6 +73,7 @@ export default function ChatPage() {
         {
           role: "assistant",
           content: `I've analyzed your goal. It's a great start! To make this executable, I've drafted some SMART goals. Does this timeline work for you, or should we adjust the intensity?`,
+          actionsTaken: 3,
         },
       ]);
       setAuditStats({ clarityScore: 7, actionability: 4, platformReady: true });
@@ -64,74 +88,192 @@ export default function ChatPage() {
     setUserInput("");
     setIsProcessing(true);
 
-    // TODO: API Call to NestJS Chat Agent
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
           content: "Understood. I've updated the plan constraints.",
+          actionsTaken: 2,
         },
       ]);
       setIsProcessing(false);
     }, 1000);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-background pt-16">
-      {/* LEFT: Chat Area */}
-      <div className="flex-1 flex flex-col border-r border-border">
-        <ScrollArea className="flex-1 p-6" ref={scrollRef}>
-          <div className="max-w-2xl mx-auto space-y-6">
+    <div className="flex h-screen bg-background">
+      {/* Main Chat Area - Full Width Bolt-style */}
+      <div className="flex-1 flex flex-col relative overflow-hidden">
+        {/* Messages Section */}
+        <div className="flex-1 overflow-y-auto">
+          <section className="flex flex-col gap-6 w-full max-w-3xl py-6 mx-auto px-4">
             {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[80%] p-4 rounded-2xl ${
-                    m.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary border border-border"
-                  }`}
-                >
-                  <p className="text-sm">{m.content}</p>
-                </div>
+              <div key={i} className="flex flex-col gap-3">
+                {m.role === "user" ? (
+                  /* User Message - Right aligned bubble */
+                  <div className="relative flex flex-col overflow-hidden bg-primary/10 border border-primary/20 px-4 py-3 rounded-2xl self-end max-w-[85%]">
+                    <p className="text-sm text-foreground">{m.content}</p>
+                  </div>
+                ) : (
+                  /* Assistant Message - Full width with icon */
+                  <div className="relative flex flex-col overflow-hidden">
+                    <div className="flex flex-col gap-3 w-full">
+                      {/* Header with Rein icon and actions menu */}
+                      <div className="flex items-center min-h-6 select-none justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                            <Sparkles className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-xs font-medium text-muted-foreground">
+                            Rein
+                          </span>
+                        </div>
+                        <button className="p-1 rounded-md hover:bg-secondary text-muted-foreground">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Message Content */}
+                      <div className="text-sm text-foreground leading-relaxed pl-10">
+                        {m.content}
+                      </div>
+
+                      {/* Actions Taken Accordion */}
+                      {m.actionsTaken && (
+                        <button className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground pl-10 py-2 group">
+                          <MoreHorizontal className="w-4 h-4" />
+                          <span>{m.actionsTaken} actions taken</span>
+                          <span className="flex-1" />
+                          <ChevronDown className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
+                        </button>
+                      )}
+
+                      {/* Version Card */}
+                      <div className="pl-10 mt-2">
+                        <div className="relative h-16 flex items-center justify-between p-3 py-2 rounded-lg border border-primary/20 bg-primary/5 max-w-[360px]">
+                          <div className="flex-col min-w-0 pr-0">
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium text-sm text-foreground truncate max-w-[280px]">
+                                Plan analysis complete
+                              </span>
+                            </div>
+                            <div className="text-xs text-muted-foreground pt-1">
+                              Version 1
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
+
+            {/* Loading State */}
             {isProcessing && (
-              <div className="flex justify-start gap-2 items-center text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-xs italic">Rein is thinking...</span>
+              <div className="flex items-center gap-3 pl-10">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                </div>
+                <span className="text-sm text-muted-foreground italic">
+                  Rein is thinking...
+                </span>
               </div>
             )}
-          </div>
-        </ScrollArea>
 
-        {/* Input Dock */}
-        <div className="p-6 border-t border-border bg-card/50">
-          <div className="max-w-2xl mx-auto flex gap-2">
-            <input
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-              placeholder="Ask Rein to adjust the plan..."
-              className="flex-1 bg-background border-2 border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-all"
-            />
-            <Button onClick={handleSendMessage} disabled={isProcessing}>
-              Send
-            </Button>
+            <div ref={messagesEndRef} />
+          </section>
+        </div>
+
+        {/* Scroll to Bottom Button */}
+        {messages.length > 3 && (
+          <div className="sticky h-0 z-10 flex justify-center w-full bottom-48">
+            <button
+              onClick={() =>
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="flex items-center justify-center size-8 rounded-full shadow-lg bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Sticky Bottom Prompt Box */}
+        <div className="z-20 sticky bottom-0 bg-background">
+          <div className="px-4 w-full max-w-3xl mx-auto pb-6">
+            {/* Prompt Container */}
+            <div className="relative shadow-lg rounded-2xl overflow-hidden">
+              {/* Gradient Border Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 -z-10" />
+
+              <div className="bg-card border border-border rounded-2xl">
+                {/* Textarea */}
+                <div className="relative">
+                  <textarea
+                    ref={textareaRef}
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="How can Rein help you today?"
+                    className="w-full pl-5 pt-5 pr-16 focus:outline-none resize-none text-foreground placeholder:text-muted-foreground bg-transparent text-sm min-h-[80px] max-h-[400px]"
+                  />
+                </div>
+
+                {/* Bottom Toolbar */}
+                <div className="flex justify-between items-center text-sm px-3 pb-3 pt-2 overflow-hidden gap-2">
+                  {/* Left Side Actions */}
+                  <div className="flex gap-1 items-center min-w-0 flex-shrink">
+                    <button className="flex items-center justify-center size-7 text-muted-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary rounded-full transition-colors">
+                      <Plus className="w-4 h-4" />
+                    </button>
+
+                    {/* Model Selector */}
+                    <button className="flex items-center gap-1 text-xs px-2 h-7 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <span>Rein Agent</span>
+                      <ChevronDown className="w-3 h-3 opacity-70" />
+                    </button>
+                  </div>
+
+                  {/* Right Side Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button className="rounded-full px-2 h-7 flex items-center gap-1 text-xs bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                      <Lightbulb className="w-4 h-4" />
+                      <span className="hidden sm:inline">Plan</span>
+                    </button>
+
+                    {/* Send Button */}
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={!userInput.trim() || isProcessing}
+                      className="flex items-center justify-center size-7 rounded-full bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* RIGHT: Rein Intelligence Sidebar (The Opik Hook) */}
-      <div className="w-80 bg-secondary/30 p-6 flex flex-col gap-6 overflow-y-auto">
+      {/* RIGHT: Rein Intelligence Sidebar */}
+      <div className="w-80 bg-secondary/30 border-l border-border p-6 flex flex-col gap-6 overflow-y-auto hidden lg:flex">
         <div className="space-y-2">
           <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
             <Terminal className="w-3 h-3" /> Rein Audit Trace
           </h2>
-          <Card className="p-4 bg-black text-green-500 font-mono text-[10px] space-y-1">
+          <Card className="p-4 bg-black text-green-500 font-mono text-[10px] space-y-1 border-none">
             <p>&gt; OPIK_TRACE_ID: {Math.random().toString(36).substring(7)}</p>
             <p>&gt; CLARITY_SCORE: {auditStats.clarityScore}/10</p>
             <p>&gt; ACTIONABILITY: {auditStats.actionability}/10</p>
