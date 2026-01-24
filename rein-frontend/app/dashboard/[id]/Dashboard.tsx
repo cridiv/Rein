@@ -82,12 +82,12 @@ export default function Dashboard() {
             {/* Example Task: GitHub */}
             <div className="flex gap-4 group">
               <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full border-2 border-black bg-white flex items-center justify-center z-10">
+                <div className="w-10 h-10 rounded-full border-2 border-black bg-black flex items-center justify-center z-10">
                   <Github className="w-5 h-5" />
                 </div>
-                <div className="w-1 h-full bg-black/10 group-last:hidden" />
+                <div className="w-1 h-full bg-primary/10 group-last:hidden" />
               </div>
-              <Card className="flex-1 p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:-translate-y-1 transition-all cursor-pointer">
+              <Card className="flex-1 brutal-card p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:-translate-y-1 transition-all cursor-pointer">
                 <div className="flex justify-between items-start">
                   <div>
                     <Badge variant="outline" className="mb-2 border-black">
@@ -108,12 +108,12 @@ export default function Dashboard() {
             {/* Example Task: Calendar */}
             <div className="flex gap-4 group">
               <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full border-2 border-black bg-white flex items-center justify-center z-10">
+                <div className="w-10 h-10 rounded-full border-2 border-black bg-black flex items-center justify-center z-10">
                   <Calendar className="w-5 h-5 text-blue-600" />
                 </div>
-                <div className="w-1 h-full bg-black/10 group-last:hidden" />
+                <div className="w-1 h-full bg-primary/10 group-last:hidden" />
               </div>
-              <Card className="flex-1 p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <Card className="flex-1 p-4 border-2 brutal-card border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <div className="flex justify-between items-start">
                   <div>
                     <Badge
@@ -144,7 +144,7 @@ export default function Dashboard() {
               Insights
             </h3>
             <div className="space-y-4">
-              <div className="p-3 bg-white border-2 border-black rounded-lg">
+              <div className="p-3 bg-black border-2 brutal-card border-black rounded-lg">
                 <p className="text-xs font-bold text-primary uppercase">
                   Current Feasibility
                 </p>
@@ -155,13 +155,13 @@ export default function Dashboard() {
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <div className="p-2 border border-black rounded bg-white text-center">
+                <div className="p-2 border border-black rounded bg-black text-center">
                   <p className="text-[10px] uppercase font-bold text-muted-foreground">
                     Efficiency
                   </p>
                   <p className="text-lg font-black">92%</p>
                 </div>
-                <div className="p-2 border border-black rounded bg-white text-center">
+                <div className="p-2 border border-black rounded bg-black text-center">
                   <p className="text-[10px] uppercase font-bold text-muted-foreground">
                     Stability
                   </p>
