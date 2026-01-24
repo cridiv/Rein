@@ -41,4 +41,3 @@ const Home = () => {
 };
 
 export default Home;
-// Change this to a execute svg
