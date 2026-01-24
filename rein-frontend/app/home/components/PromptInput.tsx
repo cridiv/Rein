@@ -30,7 +30,7 @@ const PromptInput = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/chat', {
+      const response = await fetch('http://localhost:5000/context/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

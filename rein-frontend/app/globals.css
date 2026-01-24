@@ -228,8 +228,9 @@
 
 /* Custom Scrollbar Styles */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 30px;
+  width: 4px;
+  height: 10px;
+  display: none;
 }
 
 ::-webkit-scrollbar-track {
