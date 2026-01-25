@@ -214,7 +214,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navbar />
+      </div>
 
       <div className="flex">
         {/* Sidebar Navigation */}
@@ -226,7 +228,7 @@ export default function Dashboard() {
         />
 
         {/* Main Content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 mt-12 pt-12 p-6 overflow-auto">
           <div className="max-w-[1200px] mx-auto">
             {/* Page Header */}
             <div className="mb-6">
