@@ -81,5 +81,6 @@ export interface NextClarificationRequest {
 export interface NextClarificationResponse {
   assistantMessage: string;
   roundCount: number;
-  isAtLimit: boolean;           // true if roundCount >= 2
+  isAtLimit: boolean;
+  isReady?: boolean; // ← new: tells frontend if we can proceed to generation
 }
