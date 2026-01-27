@@ -1,15 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { OpikClientService } from '../opik/opik-client.service';
 
 
 @Injectable()
 export class EvaluationService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: GoogleGenAI;
   private readonly logger = new Logger(EvaluationService.name);
 
   constructor(private opikService: OpikClientService) {
-    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+    this.genAI = new GoogleGenAI({
+      apiKey: process.env.EVALUATION_GEMINI_API_KEY!,
+    });
   }
 
   /**
@@ -38,10 +40,6 @@ export class EvaluationService {
     });
 
     try {
-      const model = this.genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash',
-      });
-
       const evaluationPrompt = `
 You are an expert at evaluating SMART goals and resolutions.
 
@@ -74,8 +72,11 @@ Return your evaluation as JSON:
         goalId,
       });
 
-      const result = await model.generateContent(evaluationPrompt);
-      const evaluationText = result.response.text();
+      const result = await this.genAI.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: evaluationPrompt }] }],
+      });
+      const evaluationText = result.text || '';
 
       // Parse JSON response
       const jsonMatch = evaluationText.match(/\{[\s\S]*\}/);
@@ -141,10 +142,6 @@ Return your evaluation as JSON:
     });
 
     try {
-      const model = this.genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash',
-      });
-
       const evaluationPrompt = `
 You are an expert at evaluating project and learning plans.
 
@@ -178,8 +175,15 @@ Return your evaluation as JSON:
         planId,
       });
 
-      const result = await model.generateContent(evaluationPrompt);
-      const evaluationText = result.response.text();
+      const result = await this.genAI.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: evaluationPrompt }] }],
+      });
+      const evaluationText = result.text;
+
+      if (!evaluationText) {
+        throw new Error('No response text from model');
+      }
 
       const jsonMatch = evaluationText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
@@ -243,10 +247,6 @@ Return your evaluation as JSON:
     });
 
     try {
-      const model = this.genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash',
-      });
-
       const evaluationPrompt = `
 You are an expert at evaluating AI coaching quality.
 
@@ -280,8 +280,15 @@ Return your evaluation as JSON:
         { responseId },
       );
 
-      const result = await model.generateContent(evaluationPrompt);
-      const evaluationText = result.response.text();
+      const result = await this.genAI.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: evaluationPrompt }] }],
+      });
+      const evaluationText = result.text;
+
+      if (!evaluationText) {
+        throw new Error('No response text from model');
+      }
 
       const jsonMatch = evaluationText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {

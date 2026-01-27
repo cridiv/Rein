@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { OpikClientService } from '../opik/opik-client.service';
 import { Trace } from '../tracing/tracing.decorator';
 
@@ -14,11 +14,13 @@ import { Trace } from '../tracing/tracing.decorator';
  */
 @Injectable()
 export class LlmServiceWithTracing {
-  private genAI: GoogleGenerativeAI;
+  private genAI: GoogleGenAI;
   private readonly logger = new Logger(LlmServiceWithTracing.name);
 
   constructor(private opikService: OpikClientService) {
-    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+    this.genAI = new GoogleGenAI({
+      apiKey: process.env.TRACING_GEMINI_API_KEY || '',
+    });
   }
 
   /**
@@ -38,14 +40,6 @@ export class LlmServiceWithTracing {
       format?: 'json' | 'text' | 'markdown';
     },
   ): Promise<any> {
-    const model = this.genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      generationConfig: {
-        temperature: options?.temperature || 0.7,
-        maxOutputTokens: options?.maxTokens || 2000,
-      },
-    });
-
     const trace = this.opikService.startTrace('llm_content_generation', {
       format: options?.format,
       temperature: options?.temperature,
@@ -75,18 +69,25 @@ export class LlmServiceWithTracing {
 
       // Call model
       const callSpan = this.opikService.createSpan(trace, 'model_call', {
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash-lite',
       });
 
-      const result = await model.generateContent(fullPrompt);
-      const responseText = result.response.text();
+      const result = await this.genAI.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+      });
+      const responseText = result.text;
+
+      if (!responseText) {
+        throw new Error('No response text from model');
+      }
 
       this.opikService.endSpan(callSpan, {
         response_length: responseText.length,
       });
 
       // Parse response
-      let output = responseText;
+      let output: any = responseText;
       if (options?.format === 'json') {
         const parseSpan = this.opikService.createSpan(trace, 'json_parsing', {
           response_preview: responseText.substring(0, 100),
@@ -148,14 +149,6 @@ export class LlmServiceWithTracing {
       maxTokens?: number;
     },
   ): AsyncGenerator<string> {
-    const model = this.genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      generationConfig: {
-        temperature: options?.temperature || 0.7,
-        maxOutputTokens: options?.maxTokens || 2000,
-      },
-    });
-
     const trace = this.opikService.startTrace('llm_streaming_generation', {
       temperature: options?.temperature,
     });
@@ -174,17 +167,20 @@ export class LlmServiceWithTracing {
       });
 
       const callSpan = this.opikService.createSpan(trace, 'stream_call', {
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash-lite',
       });
 
-      const stream = await model.generateContentStream(fullPrompt);
+      const stream = await this.genAI.models.generateContentStream({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+      });
 
       let totalChunks = 0;
       let totalChunkLength = 0;
 
-      for await (const chunk of stream.stream) {
+      for await (const chunk of stream) {
         totalChunks++;
-        const text = chunk.text?.() || '';
+        const text = (chunk.text as string) || '';
         totalChunkLength += text.length;
         yield text;
       }
@@ -279,7 +275,7 @@ export class LlmServiceWithTracing {
    */
   getModelInfo() {
     return {
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash-lite',
       type: 'text-generation',
       maxInputTokens: 1000000, // 1M context window
       maxOutputTokens: 16000,

@@ -468,7 +468,7 @@ async complexOperation() {
 const goal = await this.llm.generateGoal(description, context);
 
 // ❌ Avoid - No tracing
-const response = await genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+const response = await genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 ```
 
 ### 2. Use Decorators for Custom Methods

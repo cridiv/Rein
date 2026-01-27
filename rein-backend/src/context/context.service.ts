@@ -81,7 +81,7 @@ export class ContextService {
       const assistantMessage = await this.tracingService.traceLlmCall(
         'clarification_response',
         {
-          model: 'gemini-2.0-flash',
+          model: 'gemini-2.5-flash-lite',
           prompt: this.buildClarificationPrompt(session, userMessage),
           temperature: 0.6,
           maxTokens: 350,

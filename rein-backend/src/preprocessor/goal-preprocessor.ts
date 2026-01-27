@@ -75,7 +75,7 @@ Respond with valid JSON only, matching the schema exactly.
 
     try {
       const response = await this.ai.models.generateContent({
-        model: 'gemini-2.5-flash', // ← consider 1.5-flash for speed here
+        model: 'gemini-2.5-flash-lite', // ← consider 1.5-flash for speed here
         contents: prompt,
         config: {
           temperature: 0.2,

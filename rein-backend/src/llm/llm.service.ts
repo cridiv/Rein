@@ -1,14 +1,16 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 @Injectable()
 export class LlmService implements OnModuleInit {
-  private genAI: GoogleGenerativeAI;
+  private genAI: GoogleGenAI;
   private opik: any;
   private readonly logger = new Logger(LlmService.name);
 
   constructor() {
-    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+    this.genAI = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY!,
+    });
   }
 
   async onModuleInit() {
@@ -16,7 +18,7 @@ export class LlmService implements OnModuleInit {
       const { Opik } = await import('opik');
       this.opik = new Opik({ 
         apiKey: process.env.OPIK_API_KEY || '',
-        projectName: process.env.OPIK_PROJECT_NAME || 'rein-ai-coaching',
+        projectName: process.env.OPIK_PROJECT_NAME || 'rein-ai',
       });
       this.logger.log('Opik initialized successfully');
     } catch (error) {
@@ -25,8 +27,6 @@ export class LlmService implements OnModuleInit {
   }
 
   async generateContent(systemPrompt: string, userPrompt: string, traceName: string): Promise<any> {
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
     const trace = this.opik.trace({ 
       name: traceName,
       metadata: {
@@ -44,8 +44,11 @@ export class LlmService implements OnModuleInit {
       });
       inputSpan.end();
 
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
+      const result = await this.genAI.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      });
+      const responseText = result.text || '';
       
       // Parse JSON safely
       let output: any;

@@ -29,7 +29,7 @@ export class OpikClientService implements OnModuleInit, OnModuleDestroy {
       const { Opik } = await import('opik');
       this.opik = new Opik({
         apiKey: process.env.OPIK_API_KEY || '',
-        projectName: process.env.OPIK_PROJECT_NAME || 'rein-ai-coaching',
+        projectName: process.env.OPIK_PROJECT_NAME || 'rein-ai',
       });
 
       this.logger.log('Opik client initialized successfully');

@@ -73,7 +73,7 @@ class ReinMLModel:
             raise ValueError("GEMINI_API_KEY environment variable not set")
 
         genai.configure(api_key=self.genai_key)
-        self.model = genai.GenerativeModel("gemini-2.0-flash")
+        self.model = genai.GenerativeModel("gemini-2.5-flash-lite")
 
         logger.info(f"Rein ML Model initialized - Opik: {self.opik_enabled}")
 

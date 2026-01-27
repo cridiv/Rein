@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 /**
  * Simplified LLM Service without complex tracing dependencies
@@ -7,10 +7,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
  */
 @Injectable()
 export class SimpleLlmService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: GoogleGenAI;
 
   constructor() {
-    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+    this.genAI = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY!,
+    });
   }
 
   async generateContent(
@@ -24,21 +26,14 @@ export class SimpleLlmService {
     } = {}
   ): Promise<string> {
     try {
-      const model = this.genAI.getGenerativeModel({ 
-        model: options.model || 'gemini-2.0-flash' 
-      });
-
       const fullPrompt = `${systemPrompt}\n\nUser: ${userPrompt}`;
       
-      const result = await model.generateContent({
+      const result = await this.genAI.models.generateContent({
+        model: options.model || 'gemini-2.5-flash-lite',
         contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-        generationConfig: {
-          temperature: options.temperature || 0.7,
-          maxOutputTokens: options.maxOutputTokens || 1000,
-        },
       });
 
-      return result.response.text() || 'No response generated';
+      return result.text || 'No response generated';
     } catch (error) {
       console.error('LLM generation error:', error);
       return 'Error generating content. Please try again.';
