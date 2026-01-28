@@ -17,6 +17,12 @@ import {
   GripVertical,
   ArrowUp,
   X,
+  Calendar,
+  Github,
+  Mail,
+  MessageSquare,
+  Check,
+  Circle,
 } from "lucide-react";
 
 interface Message {
@@ -32,6 +38,15 @@ interface SessionData {
   roundCount: number;
   isAtLimit: boolean;
   isReady?: boolean;
+  implementationTasks?: string[];
+}
+
+interface Integration {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  connected: boolean;
+  description: string;
 }
 
 export default function ChatPage() {
@@ -55,6 +70,41 @@ export default function ChatPage() {
   const [sidebarWidth, setSidebarWidth] = useState(640);
   const [isResizing, setIsResizing] = useState(false);
   const [sidebarStatus, setSidebarStatus] = useState("none");
+
+  // Integration states
+  const [integrations, setIntegrations] = useState<Integration[]>([
+    {
+      id: "google-calendar",
+      name: "Google Calendar",
+      icon: <Calendar className="w-5 h-5" />,
+      connected: false,
+      description: "Sync tasks and deadlines to your calendar",
+    },
+    {
+      id: "github",
+      name: "GitHub",
+      icon: <Github className="w-5 h-5" />,
+      connected: false,
+      description: "Create issues and track progress",
+    },
+    {
+      id: "slack",
+      name: "Slack",
+      icon: <MessageSquare className="w-5 h-5" />,
+      connected: false,
+      description: "Get notifications and reminders",
+    },
+    {
+      id: "google-email",
+      name: "Google Email",
+      icon: <Mail className="w-5 h-5" />,
+      connected: false,
+      description: "Receive email summaries and updates",
+    },
+  ]);
+  const [selectedIntegrations, setSelectedIntegrations] = useState<string[]>(
+    [],
+  );
 
   const MIN_SIDEBAR_WIDTH = 240;
   const MAX_SIDEBAR_WIDTH = 700;
@@ -282,25 +332,48 @@ export default function ChatPage() {
     setIsProcessing(true);
 
     try {
-      // TODO: call your final resolution generation endpoint
-      // Example:
+      // Get only connected and selected integrations
+      const activeIntegrations = selectedIntegrations.filter((id) =>
+        integrations.find((int) => int.id === id && int.connected),
+      );
+
       const res = await fetch("http://localhost:5000/context/implement", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: session.sessionId }),
+        body: JSON.stringify({
+          sessionId: session.sessionId,
+          integrations: activeIntegrations,
+        }),
       });
 
       if (!res.ok) throw new Error("Failed to generate resolution");
 
       const result = await res.json();
-      // Redirect or show result
-      router.push(`/resolution?sessionId=${session.sessionId}`);
+
+      // Redirect to dynamic dashboard with the resolution ID
+      router.push(`/dashboard/${result.dashboardId || session.sessionId}`);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsProcessing(false);
     }
   };
+
+  const toggleIntegration = (integrationId: string) => {
+    setSelectedIntegrations((prev) =>
+      prev.includes(integrationId)
+        ? prev.filter((id) => id !== integrationId)
+        : [...prev, integrationId],
+    );
+  };
+
+  // Mock implementation tasks - in production, these would come from the session
+  const implementationTasks = session?.implementationTasks || [
+    "Create daily workout schedule",
+    "Set up progress tracking milestones",
+    "Configure reminder notifications",
+    "Establish accountability checkpoints",
+  ];
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -488,30 +561,129 @@ export default function ChatPage() {
             style={{ width: sidebarWidth }}
             className="bg-secondary/30 p-6 flex flex-col gap-6 overflow-y-auto"
           >
-            {/* nav for the implement plan section */}
+            {/* Header */}
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Implementation Overview</h2>
-
               <button
                 onClick={() => setSidebarStatus("none")}
                 className="p-1 rounded-md cursor-pointer hover:bg-secondary text-muted-foreground"
               >
-                <X className="w-5 h-5 text-muted-foreground" />{" "}
-                {/* close sidebar */}
+                <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
-            {/* Your existing sidebar content – audit trace, SMART goals, etc. */}
-            {/* You can connect real data from session here later */}
-            <Button
-              variant="default"
-              onClick={handleImplement}
-              disabled={
-                isProcessing || (!session?.isReady && !session?.isAtLimit)
-              }
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Implement Plan
-            </Button>
+
+            {/* Implementation Tasks */}
+            <div className="flex flex-col gap-3">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                What will be implemented
+              </h3>
+              <div className="flex flex-col gap-2">
+                {implementationTasks.map((task, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-3 p-3 bg-card rounded-lg border border-border"
+                  >
+                    <div className="mt-0.5 w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-primary" />
+                    </div>
+                    <span className="text-sm text-foreground">{task}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Integrations Selection */}
+            <div className="flex flex-col gap-3">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Select integrations to sync
+              </h3>
+              <div className="flex flex-col gap-2">
+                {integrations.map((integration) => (
+                  <div
+                    key={integration.id}
+                    onClick={() =>
+                      integration.connected && toggleIntegration(integration.id)
+                    }
+                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                      integration.connected
+                        ? selectedIntegrations.includes(integration.id)
+                          ? "bg-primary/10 border-primary/50 cursor-pointer"
+                          : "bg-card border-border cursor-pointer hover:border-primary/30"
+                        : "bg-muted/30 border-border opacity-60 cursor-not-allowed"
+                    }`}
+                  >
+                    {/* Checkbox */}
+                    <div
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                        selectedIntegrations.includes(integration.id) &&
+                        integration.connected
+                          ? "bg-primary border-primary"
+                          : "border-muted-foreground/50"
+                      }`}
+                    >
+                      {selectedIntegrations.includes(integration.id) &&
+                        integration.connected && (
+                          <Check className="w-3 h-3 text-primary-foreground" />
+                        )}
+                    </div>
+
+                    {/* Icon */}
+                    <div
+                      className={`${integration.connected ? "text-foreground" : "text-muted-foreground"}`}
+                    >
+                      {integration.icon}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">
+                          {integration.name}
+                        </span>
+                        {!integration.connected && (
+                          <Badge variant="outline" className="text-xs">
+                            Not connected
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {integration.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Implement Button */}
+            <div className="mt-auto pt-4">
+              <Button
+                variant="default"
+                onClick={handleImplement}
+                disabled={
+                  isProcessing || (!session?.isReady && !session?.isAtLimit)
+                }
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Implementing...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    Implement Now
+                  </>
+                )}
+              </Button>
+              {selectedIntegrations.length > 0 && (
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Will sync to {selectedIntegrations.length} integration
+                  {selectedIntegrations.length > 1 ? "s" : ""}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
