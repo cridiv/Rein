@@ -1,11 +1,16 @@
 import React from "react";
 
-const GithubSvg = () => {
+interface GithubSvgProps {
+  className?: string;
+}
+
+const GithubSvg: React.FC<GithubSvgProps> = ({ className }) => {
   return (
     <svg
       fill="#000000"
       viewBox="0 -0.5 25 25"
       xmlns="http://www.w3.org/2000/svg"
+      className={className}
     >
       <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
       <g

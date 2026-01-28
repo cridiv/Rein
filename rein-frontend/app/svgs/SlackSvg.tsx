@@ -1,8 +1,17 @@
 import React from "react";
 
-const SlackSvg = () => {
+interface SlackSvgProps {
+  className?: string;
+}
+
+const SlackSvg: React.FC<SlackSvgProps> = ({ className }) => {
   return (
-    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <svg
+      viewBox="0 0 16 16"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      className={className}
+    >
       <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
       <g
         id="SVGRepo_tracerCarrier"

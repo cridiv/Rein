@@ -1,6 +1,7 @@
 import React from "react";
 import Navbar from "./components/HomeNavbar";
 import PromptInput from "./components/PromptInput";
+import CalenderSvg from "../svgs/CalenderSvg";
 
 const Home = () => {
   return (
@@ -28,6 +29,7 @@ const Home = () => {
           {/* Subtitle */}
           <p className="font-medium text-base sm:text-lg text-muted-foreground text-center max-w-[90vw] md:max-w-xl">
             Turn your goals into real-world execution with AI-powered planning.
+            <CalenderSvg className="w-6 h-6 inline-block ml-2" />
           </p>
 
           {/* Prompt Input */}

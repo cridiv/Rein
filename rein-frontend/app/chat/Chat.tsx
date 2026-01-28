@@ -115,7 +115,7 @@ export default function ChatPage() {
   // ─── Resizable sidebar (kept from your code) ────────────────────────
   const [sidebarWidth, setSidebarWidth] = useState(640);
   const [isResizing, setIsResizing] = useState(false);
-  const [sidebarStatus, setSidebarStatus] = useState("none");
+  const [sidebarStatus, setSidebarStatus] = useState("flex");
   const hasInitializedRef = useRef(false);
 
   // Integration states
@@ -123,28 +123,28 @@ export default function ChatPage() {
     {
       id: "google-calendar",
       name: "Google Calendar",
-      icon: <CalenderSvg />,
+      icon: <CalenderSvg className="w-6 h-6" />,
       connected: false,
       description: "Sync tasks and deadlines to your calendar",
     },
     {
       id: "github",
       name: "GitHub",
-      icon: <GithubSvg />,
+      icon: <GithubSvg className="w-6 h-6" />,
       connected: false,
       description: "Create issues and track progress",
     },
     {
       id: "slack",
       name: "Slack",
-      icon: <SlackSvg />,
+      icon: <SlackSvg className="w-6 h-6" />,
       connected: false,
       description: "Get notifications and reminders",
     },
     {
       id: "google-email",
       name: "Google Email",
-      icon: <GmailSvg />,
+      icon: <GmailSvg className="w-6 h-6" />,
       connected: false,
       description: "Receive email summaries and updates",
     },

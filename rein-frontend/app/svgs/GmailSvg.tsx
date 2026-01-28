@@ -1,6 +1,10 @@
 import React from "react";
 
-const GmailSvg = () => {
+interface GmailSvgProps {
+  className?: string;
+}
+
+const GmailSvg: React.FC<GmailSvgProps> = ({ className }) => {
   return (
     <svg
       viewBox="0 -31.5 256 256"
@@ -9,6 +13,7 @@ const GmailSvg = () => {
       xmlnsXlink="http://www.w3.org/1999/xlink"
       preserveAspectRatio="xMidYMid"
       fill="#000000"
+      className={className}
     >
       <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
       <g

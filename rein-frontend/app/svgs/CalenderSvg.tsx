@@ -1,6 +1,10 @@
 import React from "react";
 
-const CalenderSvg = () => {
+interface CalenderSvgProps {
+  className?: string;
+}
+
+const CalenderSvg: React.FC<CalenderSvgProps> = ({ className }) => {
   return (
     <svg
       viewBox="0 0 256 256"
@@ -9,6 +13,7 @@ const CalenderSvg = () => {
       xmlnsXlink="http://www.w3.org/1999/xlink"
       preserveAspectRatio="xMidYMid"
       fill="#000000"
+      className={className}
     >
       <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
       <g
