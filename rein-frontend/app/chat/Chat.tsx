@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import ReactMarkdown from "react-markdown";
 import GmailSvg from "../svgs/GmailSvg";
 import SlackSvg from "../svgs/SlackSvg";
 import CalenderSvg from "../svgs/CalenderSvg";
@@ -165,18 +166,17 @@ export default function ChatPage() {
     }
   }, [userInput]);
 
-useEffect(() => {
-  if (hasInitializedRef.current) return;
-  
-  if (sessionIdFromUrl) {
-    hasInitializedRef.current = true;
-    loadExistingSession(sessionIdFromUrl);
-  } else if (initialPrompt && !session) {
-    hasInitializedRef.current = true;
-    startClarification(initialPrompt);
-  }
-}, [initialPrompt, sessionIdFromUrl]);
+  useEffect(() => {
+    if (hasInitializedRef.current) return;
 
+    if (sessionIdFromUrl) {
+      hasInitializedRef.current = true;
+      loadExistingSession(sessionIdFromUrl);
+    } else if (initialPrompt && !session) {
+      hasInitializedRef.current = true;
+      startClarification(initialPrompt);
+    }
+  }, [initialPrompt, sessionIdFromUrl]);
 
   const loadExistingSession = async (sid: string) => {
     setIsProcessing(true);
@@ -203,86 +203,86 @@ useEffect(() => {
     }
   };
 
-const startClarification = async (prompt: string) => {
-  setIsProcessing(true);
-  setError(null);
-
-  try {
-    // 1. Only start the session (don't ask for clarification yet)
-    const res = await fetch("http://localhost:5000/context/start", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(
-        `Failed to start clarification: ${res.status} - ${errText}`,
-      );
-    }
-
-    const data = await res.json();
-
-    if (data.type === "skip") {
-      router.push("/resolution");
-      return;
-    }
-
-    const newSession = data.session;
-
-    setSession({
-      sessionId: newSession.sessionId,
-      originalPrompt: newSession.originalPrompt,
-      history: newSession.history,
-      roundCount: newSession.roundCount,
-      isAtLimit: false,
-      isReady: false,
-    });
-
-    const userInitialMsg = { role: "user" as const, content: prompt };
-    setMessages([userInitialMsg]);
-
-    // 2. NOW get first AI clarification (with empty userMessage for first turn)
+  const startClarification = async (prompt: string) => {
     setIsProcessing(true);
+    setError(null);
 
-    const firstAiRes = await fetch("http://localhost:5000/context/next", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    try {
+      // 1. Only start the session (don't ask for clarification yet)
+      const res = await fetch("http://localhost:5000/context/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(
+          `Failed to start clarification: ${res.status} - ${errText}`,
+        );
+      }
+
+      const data = await res.json();
+
+      if (data.type === "skip") {
+        router.push("/resolution");
+        return;
+      }
+
+      const newSession = data.session;
+
+      setSession({
         sessionId: newSession.sessionId,
-        userMessage: "",
-      }),
-    });
+        originalPrompt: newSession.originalPrompt,
+        history: newSession.history,
+        roundCount: newSession.roundCount,
+        isAtLimit: false,
+        isReady: false,
+      });
 
-    if (!firstAiRes.ok) {
-      throw new Error("Failed to get initial AI clarification");
+      const userInitialMsg = { role: "user" as const, content: prompt };
+      setMessages([userInitialMsg]);
+
+      // 2. NOW get first AI clarification (with empty userMessage for first turn)
+      setIsProcessing(true);
+
+      const firstAiRes = await fetch("http://localhost:5000/context/next", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: newSession.sessionId,
+          userMessage: "",
+        }),
+      });
+
+      if (!firstAiRes.ok) {
+        throw new Error("Failed to get initial AI clarification");
+      }
+
+      const firstAiData = await firstAiRes.json();
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: firstAiData.assistantMessage },
+      ]);
+
+      setSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              roundCount: firstAiData.roundCount,
+              isAtLimit: firstAiData.isAtLimit,
+              isReady: firstAiData.isReady ?? prev.isReady,
+            }
+          : null,
+      );
+    } catch (err: any) {
+      setError(err.message || "Failed to start clarification session");
+      console.error(err);
+    } finally {
+      setIsProcessing(false);
     }
-
-    const firstAiData = await firstAiRes.json();
-
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: firstAiData.assistantMessage },
-    ]);
-
-    setSession((prev) =>
-      prev
-        ? {
-            ...prev,
-            roundCount: firstAiData.roundCount,
-            isAtLimit: firstAiData.isAtLimit,
-            isReady: firstAiData.isReady ?? prev.isReady,
-          }
-        : null,
-    );
-  } catch (err: any) {
-    setError(err.message || "Failed to start clarification session");
-    console.error(err);
-  } finally {
-    setIsProcessing(false);
-  }
-};
+  };
 
   const handleSendMessage = async () => {
     if (!userInput.trim() || !session || isProcessing) return;
@@ -451,7 +451,9 @@ const startClarification = async (prompt: string) => {
                 <div key={i} className="flex flex-col gap-3">
                   {m.role === "user" ? (
                     <div className="relative flex flex-col overflow-hidden bg-primary/10 border border-primary/20 px-4 py-3 rounded-2xl self-end max-w-[85%]">
-                      <p className="text-sm text-foreground">{m.content}</p>
+                      <div className="text-sm text-foreground prose prose-sm dark:prose-invert max-w-none">
+                        <ReactMarkdown>{m.content}</ReactMarkdown>
+                      </div>
                     </div>
                   ) : (
                     <div className="relative flex flex-col overflow-hidden">
@@ -475,8 +477,8 @@ const startClarification = async (prompt: string) => {
                           </button>
                         </div>
 
-                        <div className="text-sm text-foreground leading-relaxed pl-10">
-                          {m.content}
+                        <div className="text-sm text-white text-foreground leading-relaxed pl-10 prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 prose-headings:my-2">
+                          <ReactMarkdown>{m.content}</ReactMarkdown>
                         </div>
                       </div>
                     </div>
@@ -484,85 +486,85 @@ const startClarification = async (prompt: string) => {
                 </div>
               ))}
 
-{showSummary && session?.summary && (
-  <div className="pt-3 pb-3 pl-10">
-    <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 rounded-lg p-5 max-w-2xl">
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-          <CheckCircle2 className="w-5 h-5 text-blue-600" />
-        </div>
-        <div className="flex-1">
-          <h4 className="text-sm font-semibold text-foreground mb-2">
-            Implementation Plan
-          </h4>
-          <div className="text-sm text-foreground whitespace-pre-line">
-            {session.summary}
-          </div>
-        </div>
-      </div>
+              {showSummary && session?.summary && (
+                <div className="pt-3 pb-3 pl-10">
+                  <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 rounded-lg p-5 max-w-2xl">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-foreground mb-2">
+                          Implementation Plan
+                        </h4>
+                        <div className="text-sm text-foreground prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0">
+                          <ReactMarkdown>{session.summary}</ReactMarkdown>
+                        </div>
+                      </div>
+                    </div>
 
-      {isEditingPlan ? (
-        <div className="flex flex-col gap-3 mt-4">
-          <textarea
-            value={corrections}
-            onChange={(e) => setCorrections(e.target.value)}
-            placeholder="What would you like to change? (e.g., 'Actually, use Next.js instead of React')"
-            className="w-full p-3 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-            rows={3}
-          />
-          <div className="flex gap-2">
-            <Button
-              onClick={handleSubmitCorrections}
-              disabled={!corrections.trim() || isProcessing}
-              size="sm"
-              className="flex-1"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                "Update Plan"
+                    {isEditingPlan ? (
+                      <div className="flex flex-col gap-3 mt-4">
+                        <textarea
+                          value={corrections}
+                          onChange={(e) => setCorrections(e.target.value)}
+                          placeholder="What would you like to change? (e.g., 'Actually, use Next.js instead of React')"
+                          className="w-full p-3 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                          rows={3}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleSubmitCorrections}
+                            disabled={!corrections.trim() || isProcessing}
+                            size="sm"
+                            className="flex-1"
+                          >
+                            {isProcessing ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Updating...
+                              </>
+                            ) : (
+                              "Update Plan"
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setIsEditingPlan(false);
+                              setCorrections("");
+                            }}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          onClick={() => {
+                            setShowSummary(false);
+                            setSidebarStatus("flex");
+                          }}
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          size="sm"
+                        >
+                          <Play className="w-4 h-4 mr-2" />
+                          Implement This Plan
+                        </Button>
+                        <Button
+                          onClick={handleEditPlan}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsEditingPlan(false);
-                setCorrections("");
-              }}
-              variant="outline"
-              size="sm"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex gap-2 mt-4">
-          <Button
-            onClick={() => {
-              setShowSummary(false);
-              setSidebarStatus("flex");
-            }}
-            className="flex-1 bg-green-600 hover:bg-green-700"
-            size="sm"
-          >
-            <Play className="w-4 h-4 mr-2" />
-            Implement This Plan
-          </Button>
-          <Button
-            onClick={handleEditPlan}
-            variant="outline"
-            size="sm"
-          >
-            Edit
-          </Button>
-        </div>
-      )}
-    </div>
-  </div>
-)}
 
               {isProcessing && (
                 <div className="flex items-center gap-3 pl-10">
