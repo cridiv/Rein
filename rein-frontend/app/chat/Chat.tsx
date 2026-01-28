@@ -3,6 +3,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import GmailSvg from "../svgs/GmailSvg";
+import SlackSvg from "../svgs/SlackSvg";
+import CalenderSvg from "../svgs/CalenderSvg";
+import GithubSvg from "../svgs/GithubSvg";
 import Navbar from "../home/components/HomeNavbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -76,28 +80,28 @@ export default function ChatPage() {
     {
       id: "google-calendar",
       name: "Google Calendar",
-      icon: <Calendar className="w-5 h-5" />,
+      icon: <CalenderSvg />,
       connected: false,
       description: "Sync tasks and deadlines to your calendar",
     },
     {
       id: "github",
       name: "GitHub",
-      icon: <Github className="w-5 h-5" />,
+      icon: <GithubSvg />,
       connected: false,
       description: "Create issues and track progress",
     },
     {
       id: "slack",
       name: "Slack",
-      icon: <MessageSquare className="w-5 h-5" />,
+      icon: <SlackSvg />,
       connected: false,
       description: "Get notifications and reminders",
     },
     {
       id: "google-email",
       name: "Google Email",
-      icon: <Mail className="w-5 h-5" />,
+      icon: <GmailSvg />,
       connected: false,
       description: "Receive email summaries and updates",
     },
