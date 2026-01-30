@@ -6,6 +6,7 @@ import { GeneratorModule } from './generator/generator.module';
 import { CommonModule } from './common/common.module';
 import { ResolutionModule } from './resolution/resolution.module';
 import { UserModule } from './user/user.module';
+import { PrismaModule } from './prisma/prisma.module';
 import { ContextModule } from './context/context.module';
 import { MlInfrastructureModule } from './ml/ml-infrastructure.module';
 
@@ -18,6 +19,7 @@ import { MlInfrastructureModule } from './ml/ml-infrastructure.module';
     MlInfrastructureModule,
     GeneratorModule,
     ContextModule,
+    PrismaModule,
     CommonModule,
     ResolutionModule,
     UserModule,

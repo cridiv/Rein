@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
+import { motion, AnimatePresence } from "framer-motion";
 import GmailSvg from "../svgs/GmailSvg";
 import SlackSvg from "../svgs/SlackSvg";
 import CalenderSvg from "../svgs/CalenderSvg";
@@ -12,6 +13,8 @@ import Navbar from "../home/components/HomeNavbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { resolutionAPI, Resolution } from "@/lib/resolutions";
+import { supabase } from "@/lib/supabase";
 import {
   CheckCircle2,
   Loader2,
@@ -108,6 +111,7 @@ export default function ChatPage() {
   const [showSummary, setShowSummary] = useState(false);
   const [isEditingPlan, setIsEditingPlan] = useState(false);
   const [corrections, setCorrections] = useState("");
+  const [isGeneratingRoadmap, setIsGeneratingRoadmap] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -115,7 +119,7 @@ export default function ChatPage() {
   // ─── Resizable sidebar (kept from your code) ────────────────────────
   const [sidebarWidth, setSidebarWidth] = useState(640);
   const [isResizing, setIsResizing] = useState(false);
-  const [sidebarStatus, setSidebarStatus] = useState("flex");
+  const [sidebarStatus, setSidebarStatus] = useState("none");
   const hasInitializedRef = useRef(false);
 
   // Integration states
@@ -152,6 +156,7 @@ export default function ChatPage() {
   const [selectedIntegrations, setSelectedIntegrations] = useState<string[]>(
     [],
   );
+  const [savedResolutions, setSavedResolutions] = useState<any[]>([]);
 
   const MIN_SIDEBAR_WIDTH = 240;
   const MAX_SIDEBAR_WIDTH = 700;
@@ -214,6 +219,23 @@ export default function ChatPage() {
       startClarification(initialPrompt);
     }
   }, [initialPrompt, sessionIdFromUrl]);
+
+  // Fetch saved resolutions for current user
+  useEffect(() => {
+    const fetchSavedResolutions = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const resolutions = await resolutionAPI.getAllByUser(user.id);
+          setSavedResolutions(resolutions);
+        }
+      } catch (error) {
+        console.error('Failed to fetch saved resolutions:', error);
+      }
+    };
+
+    fetchSavedResolutions();
+  }, []);
 
   const loadExistingSession = async (sid: string) => {
     setIsProcessing(true);
@@ -420,6 +442,12 @@ export default function ChatPage() {
     setIsProcessing(true);
 
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('You must be logged in to save resolutions');
+      }
+
       // Use the session summary if available, otherwise fall back to original prompt
       const prompt = session.summary || session.originalPrompt;
       
@@ -441,13 +469,78 @@ export default function ChatPage() {
         throw new Error(result.error);
       }
 
-      // Redirect to dynamic dashboard with the resolution data
-      // For now, we'll redirect with the session ID - you might want to store the result somewhere first
-      router.push(`/dashboard/${session.sessionId}`);
+      // Save the resolution to database
+      const savedResolution = await resolutionAPI.create({
+        userId: user.id,
+        title: prompt.slice(0, 100), // Use first 100 chars as title
+        goal: prompt,
+        roadmap: result.resolution,
+      });
+
+      // Refresh saved resolutions to include the new one
+      const updatedResolutions = await resolutionAPI.getAllByUser(user.id);
+      setSavedResolutions(updatedResolutions);
+
+      // Redirect to dynamic dashboard with the saved resolution ID
+      router.push(`/dashboard/${savedResolution.id}`);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleGenerateRoadmap = async () => {
+    if (!session?.isReady && !session?.isAtLimit) return;
+
+    setIsGeneratingRoadmap(true);
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('You must be logged in to generate resolutions');
+      }
+
+      // Use the session summary if available, otherwise fall back to original prompt
+      const prompt = session.summary || session.originalPrompt;
+      
+      const res = await fetch("http://localhost:5000/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: prompt,
+          mode: "plan",
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to generate resolution");
+
+      const result = await res.json();
+
+      // Check for error in response
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Save the resolution to database
+      const savedResolution = await resolutionAPI.create({
+        userId: user.id,
+        title: prompt.slice(0, 100), // Use first 100 chars as title
+        goal: prompt,
+        roadmap: result.resolution,
+      });
+
+      // Refresh saved resolutions to include the new one
+      const updatedResolutions = await resolutionAPI.getAllByUser(user.id);
+      setSavedResolutions(updatedResolutions);
+
+      // Show the implementation sidebar
+      setShowSummary(false);
+      setSidebarStatus("flex");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsGeneratingRoadmap(false);
     }
   };
 
@@ -459,13 +552,25 @@ export default function ChatPage() {
     );
   };
 
-  // Mock implementation tasks - in production, these would come from the session
-  const implementationTasks = session?.implementationTasks || [
-    "Create daily workout schedule",
-    "Set up progress tracking milestones",
-    "Configure reminder notifications",
-    "Establish accountability checkpoints",
-  ];
+  // Get stages from the most recent saved resolution, or fall back to mock data
+  const getImplementationTasks = () => {
+    if (savedResolutions.length > 0) {
+      const latestResolution = savedResolutions[0]; // Assuming they're sorted by createdAt desc
+      if (latestResolution.roadmap && Array.isArray(latestResolution.roadmap)) {
+        // Extract stage titles from the roadmap
+        return latestResolution.roadmap.map((stage: any) => stage.title || stage.name || 'Untitled Stage');
+      }
+    }
+    // Fall back to session implementation tasks or mock data
+    return session?.implementationTasks || [
+      "Create daily workout schedule",
+      "Set up progress tracking milestones", 
+      "Configure reminder notifications",
+      "Establish accountability checkpoints",
+    ];
+  };
+  
+  const implementationTasks = getImplementationTasks();
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -590,15 +695,22 @@ export default function ChatPage() {
                     ) : (
                       <div className="flex gap-2 mt-4">
                         <Button
-                          onClick={() => {
-                            setShowSummary(false);
-                            setSidebarStatus("flex");
-                          }}
-                          className="cursor-pointer flex-1 bg-primary hover:bg-primary/70"
+                          onClick={handleGenerateRoadmap}
+                          disabled={isGeneratingRoadmap}
+                          className="cursor-pointer flex-1 bg-primary hover:bg-primary/70 disabled:opacity-50"
                           size="sm"
                         >
-                          <Play className="w-4 h-4 mr-2" />
-                          Implement This Plan
+                          {isGeneratingRoadmap ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Generating Plan...
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-4 h-4 mr-2" />
+                              Implement This Plan
+                            </>
+                          )}
                         </Button>
                         <Button
                           onClick={handleEditPlan}
@@ -722,150 +834,171 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* Sidebar – kept your design */}
-        <div className="hidden lg:flex" style={{ display: sidebarStatus }}>
-          <div
-            onMouseDown={handleMouseDown}
-            className={`w-2 hover:w-2.5 bg-border hover:bg-primary/50 cursor-col-resize transition-all flex items-center justify-center group ${
-              isResizing ? "bg-primary/50 w-1.5" : ""
-            }`}
-          >
-            <div
-              className={`opacity-100 text-white p-4 bg-gray rounded-full group-hover:opacity-100 transition-opacity ${isResizing ? "opacity-100" : ""}`}
+        {/* Sidebar – with Framer Motion animations */}
+        <AnimatePresence mode="wait">
+          {sidebarStatus === "flex" && (
+            <motion.div
+              initial={{ x: "100%", opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "100%", opacity: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                opacity: { duration: 0.2 },
+              }}
+              className="hidden lg:flex"
             >
-              <GripVertical className="w-3 h-3 text-muted-foreground" />
-            </div>
-          </div>
-
-          <div
-            style={{ width: sidebarWidth }}
-            className="bg-secondary/30 p-6 flex flex-col gap-6 overflow-y-auto"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Implementation Overview</h2>
-              <button
-                onClick={() => setSidebarStatus("none")}
-                className="p-1 rounded-md cursor-pointer hover:bg-secondary text-muted-foreground"
+              <div
+                onMouseDown={handleMouseDown}
+                className={`w-2 hover:w-2.5 bg-border hover:bg-primary/50 cursor-col-resize transition-all flex items-center justify-center group ${
+                  isResizing ? "bg-primary/50 w-1.5" : ""
+                }`}
               >
-                <X className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
-
-            {/* Implementation Tasks */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                What will be implemented
-              </h3>
-              <div className="flex flex-col gap-2">
-                {implementationTasks.map((task, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3 p-3 bg-card rounded-lg border border-border"
-                  >
-                    <div className="mt-0.5 w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-3 h-3 text-primary" />
-                    </div>
-                    <span className="text-sm text-foreground">{task}</span>
-                  </div>
-                ))}
+                <div
+                  className={`opacity-100 text-white p-4 bg-gray rounded-full group-hover:opacity-100 transition-opacity ${isResizing ? "opacity-100" : ""}`}
+                >
+                  <GripVertical className="w-3 h-3 text-muted-foreground" />
+                </div>
               </div>
-            </div>
 
-            {/* Integrations Selection */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Select integrations to sync
-              </h3>
-              <div className="flex flex-col gap-2">
-                {integrations.map((integration) => (
-                  <div
-                    key={integration.id}
-                    onClick={() =>
-                      integration.connected && toggleIntegration(integration.id)
-                    }
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                      integration.connected
-                        ? selectedIntegrations.includes(integration.id)
-                          ? "bg-primary/10 border-primary/50 cursor-pointer"
-                          : "bg-card border-border cursor-pointer hover:border-primary/30"
-                        : "bg-muted/30 border-border opacity-60 cursor-not-allowed"
-                    }`}
+              <motion.div
+                style={{ width: sidebarWidth }}
+                className="bg-secondary/30 p-6 flex flex-col gap-6 overflow-y-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1, duration: 0.2 }}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">
+                    Implementation Overview
+                  </h2>
+                  <button
+                    onClick={() => setSidebarStatus("none")}
+                    className="p-1 rounded-md cursor-pointer hover:bg-secondary text-muted-foreground"
                   >
-                    {/* Checkbox */}
-                    <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                        selectedIntegrations.includes(integration.id) &&
-                        integration.connected
-                          ? "bg-primary border-primary"
-                          : "border-muted-foreground/50"
-                      }`}
-                    >
-                      {selectedIntegrations.includes(integration.id) &&
-                        integration.connected && (
-                          <Check className="w-3 h-3 text-primary-foreground" />
-                        )}
-                    </div>
+                    <X className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                </div>
 
-                    {/* Icon */}
-                    <div
-                      className={`${integration.connected ? "text-foreground" : "text-muted-foreground"}`}
-                    >
-                      {integration.icon}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {integration.name}
-                        </span>
-                        {!integration.connected && (
-                          <Badge variant="outline" className="text-xs">
-                            Not connected
-                          </Badge>
-                        )}
+                {/* Implementation Tasks */}
+                <div className="flex flex-col gap-3">
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    What will be implemented
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {implementationTasks.map((task, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-3 p-3 bg-card rounded-lg border border-border"
+                      >
+                        <div className="mt-0.5 w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-3 h-3 text-primary" />
+                        </div>
+                        <span className="text-sm text-foreground">{task}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {integration.description}
-                      </p>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Implement Button */}
-            <div className="mt-auto pt-4">
-              <Button
-                variant="default"
-                onClick={handleImplement}
-                disabled={
-                  isProcessing || (!session?.isReady && !session?.isAtLimit)
-                }
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Implementing...
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    Implement Now
-                  </>
-                )}
-              </Button>
-              {selectedIntegrations.length > 0 && (
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  Will sync to {selectedIntegrations.length} integration
-                  {selectedIntegrations.length > 1 ? "s" : ""}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
+                {/* Integrations Selection */}
+                <div className="flex flex-col gap-3">
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Select integrations to sync
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {integrations.map((integration) => (
+                      <div
+                        key={integration.id}
+                        onClick={() =>
+                          integration.connected &&
+                          toggleIntegration(integration.id)
+                        }
+                        className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                          integration.connected
+                            ? selectedIntegrations.includes(integration.id)
+                              ? "bg-primary/10 border-primary/50 cursor-pointer"
+                              : "bg-card border-border cursor-pointer hover:border-primary/30"
+                            : "bg-muted/30 border-border opacity-60 cursor-not-allowed"
+                        }`}
+                      >
+                        {/* Checkbox */}
+                        <div
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                            selectedIntegrations.includes(integration.id) &&
+                            integration.connected
+                              ? "bg-primary border-primary"
+                              : "border-muted-foreground/50"
+                          }`}
+                        >
+                          {selectedIntegrations.includes(integration.id) &&
+                            integration.connected && (
+                              <Check className="w-3 h-3 text-primary-foreground" />
+                            )}
+                        </div>
+
+                        {/* Icon */}
+                        <div
+                          className={`${integration.connected ? "text-foreground" : "text-muted-foreground"}`}
+                        >
+                          {integration.icon}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">
+                              {integration.name}
+                            </span>
+                            {!integration.connected && (
+                              <Badge variant="outline" className="text-xs">
+                                Not connected
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {integration.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Implement Button */}
+                <div className="mt-auto pt-4">
+                  <Button
+                    variant="default"
+                    onClick={handleImplement}
+                    disabled={
+                      isProcessing || (!session?.isReady && !session?.isAtLimit)
+                    }
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Syncing with Integrations...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        Start Implementation & Sync
+                      </>
+                    )}
+                  </Button>
+                  {selectedIntegrations.length > 0 && (
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      Will sync to {selectedIntegrations.length} integration
+                      {selectedIntegrations.length > 1 ? "s" : ""}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

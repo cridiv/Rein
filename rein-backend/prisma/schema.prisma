@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") 
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String?   @unique
+  name      String?
+  sessions  ClarificationSession[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model ClarificationSession {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt          String
+  missingFields   Json?
+  conversationHistory Json?
+  status          String   @default("active") // active, completed, abandoned
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("clarification_sessions")
+}
+
+model Resolution {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  goal        String
+  roadmap     Json     // This will store the ParsedResolution array
+  isPublic    Boolean  @default(false)
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("resolutions")
+}

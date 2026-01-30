@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ResolutionService } from './resolution.service';
 import { ResolutionController } from './resolution.controller';
-import { CommonModule } from '../common/common.module';
+import { PrismaModule } from '../prisma/prisma.module'
 
 @Module({
-  imports: [CommonModule],
+  imports: [PrismaModule],
   providers: [ResolutionService],
   controllers: [ResolutionController],
 })
