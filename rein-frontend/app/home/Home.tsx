@@ -72,11 +72,11 @@ const Home = () => {
           </div>
 
           {/* Background glow effect */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className=" fixed inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-screen bg-primary/20 rounded-full blur-[120px] opacity-30"></div>
           </div>
 
-          <div className="relative z-10 flex flex-col gap-4 items-center pb-24">
+          <div className="relative z-10 flex flex-col gap-4 items-center mb-24">
             {/* Main Heading */}
             <h1 className="flex flex-wrap items-center gap-2 sm:gap-3 text-foreground justify-center font-bold text-3xl sm:text-4xl md:text-5xl tracking-tight text-center">
               What will you
