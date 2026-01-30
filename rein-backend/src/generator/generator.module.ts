@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ChatController } from './generator.controller';
-import { ChatService } from './generator.service';
+import { GeneratorController } from './generator.controller';
+import { GeneratorService } from './generator.service';
 import { GoalPreprocessorService } from '../preprocessor/goal-preprocessor';
 
 @Module({
-  controllers: [ChatController],
-  providers: [GoalPreprocessorService, ChatService],
+  controllers: [GeneratorController],
+  providers: [GoalPreprocessorService, GeneratorService],
 })
 export class GeneratorModule {}

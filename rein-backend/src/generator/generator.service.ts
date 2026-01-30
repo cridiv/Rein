@@ -11,7 +11,7 @@ export interface ResolutionResponse {
 }
 
 @Injectable()
-export class ChatService {
+export class GeneratorService {
   private ai: GoogleGenAI;
 
   constructor(private readonly goalPreprocessor: GoalPreprocessorService) {

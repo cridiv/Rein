@@ -420,17 +420,15 @@ export default function ChatPage() {
     setIsProcessing(true);
 
     try {
-      // Get only connected and selected integrations
-      const activeIntegrations = selectedIntegrations.filter((id) =>
-        integrations.find((int) => int.id === id && int.connected),
-      );
-
-      const res = await fetch("http://localhost:5000/context/implement", {
+      // Use the session summary if available, otherwise fall back to original prompt
+      const prompt = session.summary || session.originalPrompt;
+      
+      const res = await fetch("http://localhost:5000/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId: session.sessionId,
-          integrations: activeIntegrations,
+          prompt: prompt,
+          mode: "plan",
         }),
       });
 
@@ -438,8 +436,14 @@ export default function ChatPage() {
 
       const result = await res.json();
 
-      // Redirect to dynamic dashboard with the resolution ID
-      router.push(`/dashboard/${result.dashboardId || session.sessionId}`);
+      // Check for error in response
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Redirect to dynamic dashboard with the resolution data
+      // For now, we'll redirect with the session ID - you might want to store the result somewhere first
+      router.push(`/dashboard/${session.sessionId}`);
     } catch (err: any) {
       setError(err.message);
     } finally {

@@ -1,9 +1,9 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { ChatService, ResolutionResponse } from './generator.service';
+import { GeneratorService, ResolutionResponse } from './generator.service';
 
-@Controller('chat')
-export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+@Controller('generate')
+export class GeneratorController {
+  constructor(private readonly generatorService: GeneratorService) {}
 
   @Post()
   @HttpCode(HttpStatus.OK)
@@ -16,7 +16,7 @@ export class ChatController {
     }
 
     try {
-      const result: ResolutionResponse = await this.chatService.generateResolution(prompt.trim(), modeType);
+      const result: ResolutionResponse = await this.generatorService.generateResolution(prompt.trim(), modeType);
       console.log('ROADMAP GENERATED SUCCESSFULLY');
       console.log('Calendar intent:', result.shouldTriggerCalendar);
       if (result.calendarIntentReason) {
