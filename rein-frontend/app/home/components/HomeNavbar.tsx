@@ -151,61 +151,155 @@ const Navbar = () => {
     },
   ]);
 
-  const handleConnect = (id: string) => {
-    if (id !== "calendar") {
-      console.log(`Connecting to ${id}... (not implemented yet)`);
-      return;
+  // Function to check calendar connection status
+  const checkCalendarConnection = async (userId: string) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/mcp/calendar/status?userId=${userId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.connected || false;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to check calendar connection:', error);
+      return false;
     }
+  };
 
-    // Same calendar connect logic as in ControlBar
-    const userId = "current-user-id"; // ← Replace with real user ID from auth context or props
+  // Function to check Slack connection status
+  const checkSlackConnection = async (userId: string) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/slack/status?userId=${userId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.connected || false;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to check Slack connection:', error);
+      return false;
+    }
+  };
+
+  // Check integration statuses when user is available
+  useEffect(() => {
+    const checkIntegrationStatuses = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const [calendarConnected, slackConnected] = await Promise.all([
+          checkCalendarConnection(user.id),
+          checkSlackConnection(user.id),
+        ]);
+
+        setIntegrations(prev => 
+          prev.map(integration => {
+            if (integration.id === 'calendar') {
+              return { ...integration, connected: calendarConnected };
+            }
+            if (integration.id === 'slack') {
+              return { ...integration, connected: slackConnected };
+            }
+            return integration;
+          })
+        );
+      } catch (error) {
+        console.error('Failed to check integration statuses:', error);
+      }
+    };
+
+    checkIntegrationStatuses();
+
+    // Also check for OAuth callback in URL
+    const params = new URLSearchParams(window.location.search);
+    const slackStatus = params.get('slack');
+    
+    if (slackStatus === 'connected') {
+      // Slack just connected, refresh status
+      checkIntegrationStatuses();
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [user?.id]);
+
+  const handleConnect = (id: string) => {
+    const userId = user?.id;
     if (!userId) {
       console.error("No user ID available");
       return;
     }
 
-    const width = 500;
-    const height = 600;
-    const left = window.screen.width / 2 - width / 2;
-    const top = window.screen.height / 2 - height / 2;
+    if (id === "calendar") {
+      const width = 500;
+      const height = 600;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
 
-    const authWindow = window.open(
-      `${process.env.NEXT_PUBLIC_API_URL}/mcp/calendar/auth?userId=${userId}`,
-      "calendar-auth",
-      `width=${width},height=${height},left=${left},top=${top}`,
-    );
+      const authWindow = window.open(
+        `${process.env.NEXT_PUBLIC_API_URL}/mcp/calendar/auth?userId=${userId}`,
+        "calendar-auth",
+        `width=${width},height=${height},left=${left},top=${top}`,
+      );
 
-    if (!authWindow) {
-      alert("Popup blocked. Please allow popups for this site.");
-      return;
+      if (!authWindow) {
+        alert("Popup blocked. Please allow popups for this site.");
+        return;
+      }
+
+      const handleMessage = (event: MessageEvent) => {
+        const backendOrigin = process.env.NEXT_PUBLIC_API_URL ? 
+          new URL(process.env.NEXT_PUBLIC_API_URL).origin : 
+          window.location.origin;
+        
+        if (event.origin !== backendOrigin && event.origin !== window.location.origin) {
+          console.warn('Ignoring message from unauthorized origin:', event.origin);
+          return;
+        }
+
+        if (event.data?.type === "calendar_connected" && event.data?.success) {
+          console.log("Calendar connected successfully!");
+          setIntegrations((prev) =>
+            prev.map((int) =>
+              int.id === "calendar" ? { ...int, connected: true } : int,
+            ),
+          );
+          authWindow.close();
+          window.removeEventListener("message", handleMessage);
+        }
+      };
+
+      window.addEventListener("message", handleMessage);
+
+      const checkClosed = setInterval(() => {
+        if (authWindow.closed) {
+          window.removeEventListener("message", handleMessage);
+          clearInterval(checkClosed);
+        }
+      }, 500);
+    } else if (id === "slack") {
+      // Redirect to Slack OAuth flow
+      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/slack/connect?userId=${userId}`;
+    } else {
+      console.log(`Connecting to ${id}... (not implemented yet)`);
     }
-
-    const handleMessage = (event: MessageEvent) => {
-      // Security check: verify origin
-      if (event.origin !== window.location.origin) return;
-
-      if (event.data?.type === "calendar_connected" && event.data?.success) {
-        console.log("Calendar connected successfully!");
-        setIntegrations((prev) =>
-          prev.map((int) =>
-            int.id === "calendar" ? { ...int, connected: true } : int,
-          ),
-        );
-        authWindow.close();
-        window.removeEventListener("message", handleMessage);
-        // Optional: trigger any parent callback or refetch user profile
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    // Cleanup on window close
-    const checkClosed = setInterval(() => {
-      if (authWindow.closed) {
-        window.removeEventListener("message", handleMessage);
-        clearInterval(checkClosed);
-      }
-    }, 500);
   };
 
   const connectedCount = integrations.filter((i) => i.connected).length;

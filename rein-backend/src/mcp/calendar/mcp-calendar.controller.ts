@@ -18,6 +18,11 @@ export class McpCalendarController {
       `${process.env.BACKEND_URL}/mcp/calendar/callback`,
     );
 
+    const redirectUri = `${process.env.BACKEND_URL}/mcp/calendar/callback`;
+      console.log('BACKEND_URL:', process.env.BACKEND_URL);
+      console.log('Redirect URI:', redirectUri);
+
+
     const url = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
@@ -73,6 +78,28 @@ export class McpCalendarController {
         </body>
       </html>
     `);
+  }
+
+  @Get('status')
+  async status(@Query('userId') userId: string) {
+    if (!userId) {
+      return { success: false, error: 'Missing userId' };
+    }
+
+    try {
+      const tokens = await this.service.getTokensFromDb(userId);
+      return { 
+        success: true, 
+        connected: !!tokens,
+        message: tokens ? 'Calendar is connected' : 'Calendar not connected'
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        connected: false, 
+        error: 'Failed to check calendar status' 
+      };
+    }
   }
 
   // Internal endpoint – called from ChatService

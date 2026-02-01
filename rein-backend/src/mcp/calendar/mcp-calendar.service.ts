@@ -117,7 +117,7 @@ export class McpCalendarService {
     return oauth2Client;
   }
 
-  private async getTokensFromDb(userId: string): Promise<any | null> {
+  async getTokensFromDb(userId: string): Promise<any | null> {
     const { data, error } = await this.supabase
       .from('profiles')
       .select('calendar_tokens')

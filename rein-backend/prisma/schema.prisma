@@ -46,3 +46,61 @@ model Resolution {
 
   @@map("resolutions")
 }
+
+model Commitment {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  platformUserId  String?  @map("platform_user_id")  // Slack user ID, Discord ID, etc.
+  commitmentText  String   @map("commitment_text")
+  deadline        DateTime
+  context         String?
+  channelOrDm     String   @map("channel_or_dm")
+  createdAt       DateTime @default(now()) @map("created_at")
+  status          String   @default("pending")  // pending, in_progress, done, blocked, escalated
+  
+  reminders       Reminder[]
+  escalations     Escalation[]
+  
+  @@map("commitments")
+}
+
+model Reminder {
+  id             String    @id @default(cuid())
+  commitmentId   String    @map("commitment_id")
+  sentAt         DateTime  @default(now()) @map("sent_at")
+  messageId      String    @map("message_id")     // Platform's message ID (Slack ts, Discord ID)
+  responseType   String?   @map("response_type")  // done, working, blocked, no_response
+  responseText   String?   @map("response_text")
+  responseAt     DateTime? @map("response_at")
+  
+  commitment     Commitment @relation(fields: [commitmentId], references: [id], onDelete: Cascade)
+  
+  @@map("reminders")
+}
+
+model Escalation {
+  id             String   @id @default(cuid())
+  commitmentId   String   @map("commitment_id")
+  escalatedAt    DateTime @default(now()) @map("escalated_at")
+  reason         String
+  messageId      String   @map("message_id")
+  
+  commitment     Commitment @relation(fields: [commitmentId], references: [id], onDelete: Cascade)
+  
+  @@map("escalations")
+}
+
+model SlackConnection {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  workspaceId     String   @map("workspace_id")
+  workspaceName   String?  @map("workspace_name")
+  botAccessToken  String   @map("bot_access_token")
+  slackUserId     String   @map("slack_user_id")
+  slackUserName   String?  @map("slack_user_name")
+  scope           String?
+  connectedAt     DateTime @default(now()) @map("connected_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  @@map("slack_connections")
+}
