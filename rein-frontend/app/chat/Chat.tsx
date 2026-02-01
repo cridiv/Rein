@@ -112,6 +112,7 @@ export default function ChatPage() {
   const [isEditingPlan, setIsEditingPlan] = useState(false);
   const [corrections, setCorrections] = useState("");
   const [isGeneratingRoadmap, setIsGeneratingRoadmap] = useState(false);
+  const [integrationError, setIntegrationError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -441,6 +442,15 @@ export default function ChatPage() {
   const handleImplement = async () => {
     if (!session?.isReady && !session?.isAtLimit) return;
 
+    // Check if at least one integration is selected
+    if (selectedIntegrations.length === 0) {
+      setIntegrationError(
+        "Please select at least one integration to sync with",
+      );
+      return;
+    }
+
+    setIntegrationError(null);
     setIsProcessing(true);
 
     try {
@@ -998,6 +1008,11 @@ export default function ChatPage() {
                       </>
                     )}
                   </Button>
+                  {integrationError && (
+                    <p className="text-xs text-red-500 text-center mt-2">
+                      {integrationError}
+                    </p>
+                  )}
                   {selectedIntegrations.length > 0 && (
                     <p className="text-xs text-muted-foreground text-center mt-2">
                       Will sync to {selectedIntegrations.length} integration
