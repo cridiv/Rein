@@ -8,18 +8,30 @@ import { Trophy, Activity, Target } from "lucide-react";
 interface PulseStatsProps {
   streak: number;
   progress: number;
-  healthStatus: "elite" | "good" | "moderate" | "at-risk";
+  healthStatus: "getting-started" | "building" | "strong" | "elite";
 }
 
 const healthConfig = {
-  elite: { label: "Elite", color: "text-green-600", bg: "bg-green-500/5" },
-  good: { label: "Good", color: "text-blue-600", bg: "bg-blue-500/5" },
-  moderate: {
-    label: "Moderate",
-    color: "text-yellow-600",
-    bg: "bg-yellow-500/5",
+  "getting-started": { 
+    label: "Getting Started", 
+    color: "text-gray-600", 
+    bg: "bg-gray-500/5" 
   },
-  "at-risk": { label: "At Risk", color: "text-red-600", bg: "bg-red-500/5" },
+  building: { 
+    label: "Building", 
+    color: "text-yellow-600", 
+    bg: "bg-yellow-500/5" 
+  },
+  strong: { 
+    label: "Strong", 
+    color: "text-blue-600", 
+    bg: "bg-blue-500/5" 
+  },
+  elite: { 
+    label: "Elite", 
+    color: "text-green-600", 
+    bg: "bg-green-500/5" 
+  },
 };
 
 export default function PulseStats({

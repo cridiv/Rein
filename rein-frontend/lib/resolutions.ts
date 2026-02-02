@@ -93,4 +93,116 @@ export const resolutionAPI = {
 
     return response.json();
   },
+
+  // Get resolution stats for dashboard overview
+  async getStats(id: string, userId?: string): Promise<ResolutionStats> {
+    const url = userId 
+      ? `${API_BASE_URL}/resolution/${id}/stats?userId=${userId}`
+      : `${API_BASE_URL}/resolution/${id}/stats`;
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch resolution stats');
+    }
+
+    return response.json();
+  },
+
+  // Get all tasks for a resolution
+  async getTasks(id: string, userId?: string): Promise<ResolutionTasks> {
+    const url = userId 
+      ? `${API_BASE_URL}/resolution/${id}/tasks?userId=${userId}`
+      : `${API_BASE_URL}/resolution/${id}/tasks`;
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch tasks');
+    }
+
+    return response.json();
+  },
+
+  // Get upcoming tasks
+  async getUpcomingTasks(id: string, userId?: string, limit: number = 5): Promise<UpcomingTasks> {
+    const url = userId 
+      ? `${API_BASE_URL}/resolution/${id}/tasks/upcoming?userId=${userId}&limit=${limit}`
+      : `${API_BASE_URL}/resolution/${id}/tasks/upcoming?limit=${limit}`;
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch upcoming tasks');
+    }
+
+    return response.json();
+  },
+
+  // Update task completion status
+  async updateTaskStatus(
+    resolutionId: string, 
+    taskId: string, 
+    userId: string, 
+    completed: boolean
+  ): Promise<{ success: boolean; taskId: string; completed: boolean }> {
+    const response = await fetch(`${API_BASE_URL}/resolution/${resolutionId}/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, completed }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update task status');
+    }
+
+    return response.json();
+  },
 };
+
+// Type definitions for new endpoints
+export interface ResolutionStats {
+  resolution: {
+    id: string;
+    title: string;
+    description: string;
+    startDate: string;
+    targetDate: string;
+  };
+  stats: {
+    streak: number;
+    progress: number;
+    healthStatus: string;
+    totalTasks: number;
+    completedTasks: number;
+    remainingTasks: number;
+  };
+  coachMessage: {
+    message: string;
+    confidence: number;
+  };
+}
+
+export interface ResolutionTask {
+  id: string;
+  title: string;
+  description?: string;
+  platform: 'github' | 'calendar' | 'jira' | 'slack';
+  completed: boolean;
+  weekNumber: number;
+  weekLabel: string;
+  date?: string;
+}
+
+export interface ResolutionTasks {
+  tasks: ResolutionTask[];
+  totalCount: number;
+  completedCount: number;
+}
+
+export interface UpcomingTasks {
+  tasks: ResolutionTask[];
+  totalUpcoming: number;
+}

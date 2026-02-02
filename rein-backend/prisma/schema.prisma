@@ -34,15 +34,17 @@ model ClarificationSession {
 }
 
 model Resolution {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   userId      String
   title       String
   goal        String
-  roadmap     Json     // This will store the ParsedResolution array
-  isPublic    Boolean  @default(false)
-  status      String   @default("pending")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  roadmap     Json      // This will store the ParsedResolution array
+  startDate   DateTime? // Overall resolution start date
+  endDate     DateTime? // Overall resolution end date
+  isPublic    Boolean   @default(false)
+  status      String    @default("pending")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@map("resolutions")
 }

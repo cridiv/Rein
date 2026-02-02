@@ -34,4 +34,40 @@ export class ResolutionController {
   async togglePublic(@Param('id') id: string, @Body() body: { userId: string; isPublic: boolean }) {
     return this.resolutionService.togglePublic(id, body.userId, body.isPublic);
   }
+
+  @Get(':id/stats')
+  async getStats(@Param('id') id: string, @Query('userId') userId?: string) {
+    const stats = await this.resolutionService.getResolutionStats(id, userId);
+    if (!stats) {
+      throw new NotFoundException('Resolution not found');
+    }
+    return stats;
+  }
+
+  @Get(':id/tasks')
+  async getTasks(@Param('id') id: string, @Query('userId') userId?: string) {
+    const tasks = await this.resolutionService.getResolutionTasks(id, userId);
+    if (!tasks) {
+      throw new NotFoundException('Resolution not found');
+    }
+    return tasks;
+  }
+
+  @Get(':id/tasks/upcoming')
+  async getUpcomingTasks(@Param('id') id: string, @Query('userId') userId?: string, @Query('limit') limit?: string) {
+    const tasks = await this.resolutionService.getUpcomingTasks(id, userId, limit ? parseInt(limit) : 5);
+    if (!tasks) {
+      throw new NotFoundException('Resolution not found');
+    }
+    return tasks;
+  }
+
+  @Patch(':id/tasks/:taskId')
+  async updateTask(
+    @Param('id') id: string,
+    @Param('taskId') taskId: string,
+    @Body() body: { userId: string; completed: boolean },
+  ) {
+    return this.resolutionService.updateTaskStatus(id, taskId, body.userId, body.completed);
+  }
 }

@@ -473,11 +473,11 @@ export default function ChatPage() {
         throw new Error(result.error);
       }
 
-      // Save the resolution to database
+      // Save the resolution to database with generated title and description
       const savedResolution = await resolutionAPI.create({
         userId: user.id,
-        title: prompt.slice(0, 100), // Use first 100 chars as title
-        goal: prompt,
+        title: result.title, // Use AI-generated clean title
+        goal: result.description || prompt, // Use AI-generated description or fallback to prompt
         roadmap: result.resolution,
       });
 
@@ -528,11 +528,11 @@ export default function ChatPage() {
         throw new Error(result.error);
       }
 
-      // Save the resolution to database
+      // Save the resolution to database with generated title and description
       const savedResolution = await resolutionAPI.create({
         userId: user.id,
-        title: prompt.slice(0, 100), // Use first 100 chars as title
-        goal: prompt,
+        title: result.title, // Use AI-generated clean title
+        goal: result.description || prompt, // Use AI-generated description or fallback to prompt
         roadmap: result.resolution,
       });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Navbar from "../../home/components/HomeNavbar";
 import {
   DashboardSidebar,
@@ -12,41 +12,28 @@ import {
   IntegrationsView,
   InsightsView,
 } from "./components";
+import { resolutionAPI, type ResolutionStats, type ResolutionTask } from "@/lib/resolutions";
+import { supabase } from "@/lib/supabase";
 
-export default function Dashboard() {
+interface DashboardProps {
+  id: string;
+}
+
+export default function Dashboard({ id }: DashboardProps) {
   // Dashboard navigation state
   const [currentView, setCurrentView] = useState<DashboardView>("overview");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Dashboard state
-  const [streak] = useState(12);
-  const [progress] = useState(65);
-  const [isSyncing, setIsSyncing] = useState(false);
+  // Data state
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [stats, setStats] = useState<ResolutionStats | null>(null);
+  const [tasks, setTasks] = useState<ResolutionTask[]>([]);
+  const [upcomingTasks, setUpcomingTasks] = useState<ResolutionTask[]>([]);
 
-  // Tasks state
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: "1",
-      title: "Implement Sui Wallet Connect",
-      description: "Repository: rein-core-app",
-      platform: "github",
-      completed: false,
-    },
-    {
-      id: "2",
-      title: "Deep Work: Smart Contract Audit",
-      description: "09:00 AM — 11:30 AM",
-      platform: "calendar",
-      completed: false,
-    },
-    {
-      id: "3",
-      title: "Review PR: Token Staking Module",
-      description: "Repository: sui-defi-protocol",
-      platform: "github",
-      completed: true,
-    },
-  ]);
+  // Legacy state for views not yet implemented
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Quality scores for Opik
   const qualityScores = [
@@ -96,30 +83,91 @@ export default function Dashboard() {
     },
   ];
 
-  // Upcoming tasks
-  const upcomingTasks = [
-    {
-      id: "1",
-      title: "Code Review: DeFi Protocol",
-      time: "Est. 2 hours",
-      platform: "github" as const,
-    },
-    {
-      id: "2",
-      title: "Team Standup",
-      time: "9:00 AM - 9:30 AM",
-      platform: "calendar" as const,
-    },
-  ];
+  // Fetch user and resolution data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Get user from Supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          setUserId(user.id);
+
+          // Fetch resolution stats
+          const statsData = await resolutionAPI.getStats(id, user.id);
+          setStats(statsData);
+
+          // Fetch all tasks
+          const tasksData = await resolutionAPI.getTasks(id, user.id);
+          setTasks(tasksData.tasks);
+
+          // Fetch upcoming tasks
+          const upcomingData = await resolutionAPI.getUpcomingTasks(id, user.id, 5);
+          setUpcomingTasks(upcomingData.tasks);
+        } else {
+          // If no user, try without userId (public resolution)
+          const statsData = await resolutionAPI.getStats(id);
+          setStats(statsData);
+
+          const tasksData = await resolutionAPI.getTasks(id);
+          setTasks(tasksData.tasks);
+
+          const upcomingData = await resolutionAPI.getUpcomingTasks(id, undefined, 5);
+          setUpcomingTasks(upcomingData.tasks);
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
 
   // Handlers
-  const handleTaskComplete = useCallback((taskId: string) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task,
-      ),
-    );
-  }, []);
+  const handleTaskComplete = useCallback(async (taskId: string) => {
+    if (!userId) {
+      console.error('User not authenticated');
+      return;
+    }
+
+    try {
+      // Optimistically update UI
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === taskId ? { ...task, completed: !task.completed } : task,
+        ),
+      );
+
+      // Find the task to determine new completed status
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      // Update on backend
+      await resolutionAPI.updateTaskStatus(id, taskId, userId, !task.completed);
+
+      // Refetch stats to update progress
+      const updatedStats = await resolutionAPI.getStats(id, userId);
+      setStats(updatedStats);
+
+      // Refetch upcoming tasks
+      const upcomingData = await resolutionAPI.getUpcomingTasks(id, userId, 5);
+      setUpcomingTasks(upcomingData.tasks);
+    } catch (err) {
+      console.error('Error updating task:', err);
+      // Revert optimistic update
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === taskId ? { ...task, completed: !task.completed } : task,
+        ),
+      );
+    }
+  }, [id, userId, tasks]);
 
   const handleSyncPlatforms = useCallback(() => {
     setIsSyncing(true);
@@ -145,32 +193,76 @@ export default function Dashboard() {
 
   // Render current view
   const renderView = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading your resolution...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (error || !stats) {
+      return (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-destructive mb-2">Failed to load resolution</p>
+            <p className="text-sm text-muted-foreground">{error}</p>
+          </div>
+        </div>
+      );
+    }
+
     switch (currentView) {
       case "overview":
         return (
           <OverviewView
-            streak={streak}
-            progress={progress}
-            healthStatus="elite"
+            streak={stats.stats.streak}
+            progress={stats.stats.progress}
+            healthStatus={stats.stats.healthStatus as "getting-started" | "building" | "strong" | "elite"}
             resolution={{
-              title: "Master Web3 Development",
-              description:
-                "Build 3 production-ready dApps using Sui blockchain, contribute to open-source Web3 projects, and establish myself as a blockchain developer.",
-              startDate: "Jan 1, 2026",
-              targetDate: "Jun 30, 2026",
+              title: stats.resolution.title,
+              description: stats.resolution.description,
+              startDate: new Date(stats.resolution.startDate).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              }),
+              targetDate: new Date(stats.resolution.targetDate).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              }),
             }}
             coachMessage={{
-              message:
-                "You're crushing it! Your GitHub activity is 3x higher than last week, and your 12-day streak puts you in the top 5% of Rein users. Keep this momentum—consider tackling that contract audit task next.",
-              confidence: 92,
+              message: stats.coachMessage.message,
+              confidence: stats.coachMessage.confidence,
             }}
           />
         );
       case "tasks":
+        // Convert ResolutionTask[] to Task[] format
+        const formattedTasks: Task[] = tasks.map(task => ({
+          id: task.id,
+          title: task.title,
+          description: task.description || `Week ${task.weekNumber}: ${task.weekLabel}`,
+          platform: (task.platform === 'jira' ? 'github' : task.platform) as "github" | "calendar" | "slack",
+          completed: task.completed,
+        }));
+
+        const formattedUpcoming = upcomingTasks.map(task => ({
+          id: task.id,
+          title: task.title,
+          time: task.date || `Week ${task.weekNumber}`,
+          platform: (task.platform === 'jira' ? 'github' : task.platform) as "github" | "calendar" | "slack",
+        }));
+
         return (
           <TasksView
-            tasks={tasks}
-            upcomingTasks={upcomingTasks}
+            tasks={formattedTasks}
+            upcomingTasks={formattedUpcoming}
             onTaskComplete={handleTaskComplete}
           />
         );
@@ -199,9 +291,8 @@ export default function Dashboard() {
             qualityScores={qualityScores}
             improvement={43}
             coachMessage={{
-              message:
-                "You're crushing it! Your GitHub activity is 3x higher than last week, and your 12-day streak puts you in the top 5% of Rein users. Keep this momentum—consider tackling that contract audit task next.",
-              confidence: 92,
+              message: stats.coachMessage.message,
+              confidence: stats.coachMessage.confidence,
             }}
             auditInsight="Your GitHub activity is high, but Calendar sessions are being skipped. Recommendation: Move coding tasks to early morning."
             auditStats={{ efficiency: 92, stability: 74 }}

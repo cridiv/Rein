@@ -16,6 +16,9 @@ export interface ResolutionNode {
 export interface ResolutionStage {
   id: string;
   title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
   nodes: ResolutionNode[];
 }
 

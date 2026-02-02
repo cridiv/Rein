@@ -26,6 +26,40 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const [resolutions, setResolutions] = useState<Resolution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Clean title helper function - extracts first bullet point (matches backend logic)
+  const cleanTitle = (rawTitle: string): string => {
+    let cleaned = rawTitle;
+
+    // Remove "Here's what I understood:" and similar intro phrases
+    cleaned = cleaned.replace(/^.*?(?:Here's what I understood|Here is what I understood|Understanding)[:\s]*\n*/i, '');
+    
+    // Extract content after first bullet point (handles both **text** and plain text)
+    const firstBulletMatch = cleaned.match(/^[•\-*]\s*(.+?)(?:\n|$)/m);
+    if (firstBulletMatch) {
+      cleaned = firstBulletMatch[1].trim();
+    } else {
+      // If no bullet, try to get first line
+      const lines = cleaned.split('\n').filter(line => line.trim());
+      if (lines.length > 0) {
+        cleaned = lines[0];
+      }
+    }
+    
+    // Remove all markdown formatting
+    cleaned = cleaned
+      .replace(/\*\*/g, '') // Remove bold markdown
+      .replace(/^[•\-*]\s+/gm, '') // Remove any remaining bullet points
+      .trim();
+
+    // Get just the first sentence if it's too long
+    if (cleaned.length > 200) {
+      const sentences = cleaned.split(/[.!?]\s+/);
+      cleaned = sentences[0] + (cleaned.endsWith('.') ? '' : '.');
+    }
+
+    return cleaned;
+  };
+
   // Fetch user's resolutions
   useEffect(() => {
     const fetchResolutions = async () => {
@@ -158,7 +192,7 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                                 : "text-foreground group-hover:text-foreground"
                             }`}
                           >
-                            {resolution.title}
+                            {cleanTitle(resolution.title)}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {new Date(resolution.createdAt).toLocaleDateString(
