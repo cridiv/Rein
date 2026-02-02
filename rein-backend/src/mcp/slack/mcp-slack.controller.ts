@@ -39,15 +39,13 @@ export class McpSlackController {
         userId: body.userId,
         platformUserId: body.userId,
         commitmentText: 'Test commitment for Slack messaging',
-        channelOrDm: body.channel,
         deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        context: 'Slack connection test',
+        channelOrDm: body.channel,
       });
 
-      if (!testCommitment.commitmentId) {
-        return {
-          success: false,
-          error: 'Failed to create test commitment',
-        };
+      if (!testCommitment.success || !testCommitment.commitmentId) {
+        throw new Error('Failed to create commitment');
       }
 
       // Send a test reminder
