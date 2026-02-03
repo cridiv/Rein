@@ -40,9 +40,9 @@ export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const links = [
-    { href: "/market", label: "Market", icon: ShoppingBag },
-    { href: "/create", label: "Create", icon: PlusCircle },
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/#market", label: "Features", icon: ShoppingBag },
+    { href: "/#how-it-works", label: "How It Works", icon: PlusCircle },
+    { href: "/#faqs", label: "FAQs", icon: LayoutDashboard },
   ];
 
   return (
@@ -50,7 +50,7 @@ export function Navbar() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed top-0 left-0 right-0 flex justify-center border-gray-500 m-0 font-sm p-2 bg-background/70 backdrop-blur-xl z-50 lg:rounded-full lg:mt-5 lg:mx-6 lg:py-2 lg:border lg:shadow-md lg:shadow-blue-500/30"
+      className="fixed brutal-card top-0 left-0 right-0 flex justify-center border-gray-500 m-0 font-sm p-2 bg-background/70 backdrop-blur-xl z-50 lg:rounded-full lg:mt-5 lg:mx-6 lg:py-2 lg:border lg:shadow-md lg:shadow-primary/30"
     >
       <nav className="flex justify-between items-center gap-5 w-full max-w-7xl px-2 md:px-6 h-[3.5rem] mx-auto">
         {/* Logo */}
@@ -75,11 +75,11 @@ export function Navbar() {
             <li key={link.href}>
               <MotionLink
                 href={link.href}
-                className="flex items-center gap-2 transition-colors hover:text-blue-600"
+                className="flex items-center gap-2 transition-colors hover:text-primary"
                 whileHover={{ y: -4 }}
                 layout
               >
-                <link.icon className="inline-block mr-1 mb-0.5" size={18} />
+                {/* <link.icon className="inline-block mr-1 mb-0.5" size={18} /> */}
                 {link.label}
               </MotionLink>
             </li>
@@ -87,20 +87,18 @@ export function Navbar() {
         </ul>
 
         {/* Sign in button */}
-        <MotionLink
+        <Link
           href="/signin"
-          className="hidden md:flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-medium hover:bg-blue-700 transition-colors"
-          whileHover={{ scale: 1.05 }}
-          layout
+          className="hidden md:flex items-center brutal-input gap-2 bg-seconary text-white px-4 py-2 rounded-full font-medium transition-colors"
         >
           Sign In
           <ArrowUpRight size={16} className="inline-block" />
-        </MotionLink>
+        </Link>
 
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="md:hidden text-foreground p-2 cursor-pointer"
+          className="md:hidden text-foreground p-2 cursor-pointer brutal-button"
         >
           <motion.div
             initial={false}
@@ -145,10 +143,10 @@ export function Navbar() {
                 <Link
                   href={link.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className="text-2xl border-b-2 border-foreground hover:text-blue-600 transition-colors flex items-center gap-2"
+                  className="text-2xl border-b-2 border-foreground hover:text-primary transition-colors flex items-center gap-2"
                 >
                   {link.label}
-                  <link.icon className="inline-block" size={24} />
+                  {/* <link.icon className="inline-block" size={24} /> */}
                 </Link>
               </li>
             ))}
