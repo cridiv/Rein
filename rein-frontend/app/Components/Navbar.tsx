@@ -50,7 +50,7 @@ export function Navbar() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed brutal-card top-0 left-0 right-0 flex justify-center border-gray-500 m-0 font-sm p-2 bg-background/70 backdrop-blur-xl z-50 lg:rounded-full lg:mt-5 lg:mx-6 lg:py-2 lg:border lg:shadow-md lg:shadow-primary/30"
+      className="fixed brutal-card top-0 left-0 right-0 flex justify-center border-gray-500 mx-2 font-sm p-2 bg-background/70 backdrop-blur-xl z-50 lg:rounded-full lg:mt-5 lg:mx-6 lg:py-2 lg:border lg:shadow-md lg:shadow-primary/30"
     >
       <nav className="flex justify-between items-center gap-5 w-full max-w-7xl px-2 md:px-6 h-[3.5rem] mx-auto">
         {/* Logo */}
@@ -136,20 +136,26 @@ export function Navbar() {
         </div>
 
         {/* Menu Content */}
-        <div className="flex-1 bg-background pt-4 pb-4 rounded-2xl m-4 shadow-[2px_4px_0px_0px_#3b82f6] border">
+        <div className="flex-1 brutal-card bg-background pt-4 pb-4 rounded-2xl m-4 shadow-[2px_4px_0px_0px_#3b82f6] border">
           <ul className="flex flex-col gap-6 pl-6">
             {links.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className="text-2xl border-b-2 border-foreground hover:text-primary transition-colors flex items-center gap-2"
+                  className="text-2xl hover:text-primary transition-colors flex items-center gap-2"
                 >
                   {link.label}
                   {/* <link.icon className="inline-block" size={24} /> */}
                 </Link>
               </li>
             ))}
+            <button
+              onClick={() => setIsMenuOpen(false)}
+              className="mt-4 w-[85%] brutal-button bg-seconary text-white px-4 py-3 rounded-full font-medium text-center transition-colors"
+            >
+              Sign In
+            </button>
           </ul>
         </div>
       </motion.div>
