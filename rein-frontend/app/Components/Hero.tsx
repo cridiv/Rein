@@ -40,10 +40,11 @@ const Hero = () => {
 
       <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         {/* Text Section */}
-        <section className="pt-2 pb-20 px-4 text-left">
-          <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-6">
-            REIN YOUR <br />
-            <span className="text-primary italic">FUTURE.</span>
+        <section className="pt-1 pb-20 px-4 text-left">
+          <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-6">
+            EXECUTE <br />
+            GOALS WITH&nbsp;
+            <span className="text-primary italic">REIN.</span>
           </h1>
 
           <p className="max-w-2xl mx-auto text-lg md:text-xl font-medium text-muted-foreground mb-10">
@@ -52,10 +53,10 @@ const Hero = () => {
           </p>
 
           <div className="flex flex-wrap gap-4 mt-4">
-            <button className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-medium hover:opacity-90 transition-opacity">
-              Start Executing
+            <button className="bg-primary cursor-pointer text-primary-foreground px-6 py-3 rounded-full font-medium hover:opacity-90 transition-opacity">
+              Get Started
             </button>
-            <button className="border border-border px-6 py-3 rounded-full font-medium hover:bg-muted transition-colors">
+            <button className="border border-border cursor-pointer px-6 py-3 rounded-full font-medium hover:bg-muted transition-colors">
               Learn More
             </button>
           </div>
