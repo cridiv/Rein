@@ -93,7 +93,7 @@ DON'T WORRY — EVERY EXPERT HAS OFF DAYS
 
 Losing a streak doesn't mean you've failed. It's a normal part of the journey. What matters is getting back on track.
 
-💡 Recovery Tip: Don't try to catch up on everything at once. Start fresh today with one small task. Momentum builds from action, not perfection.
+ Recovery Tip: Don't try to catch up on everything at once. Start fresh today with one small task. Momentum builds from action, not perfection.
 
 Remember: Your longest streak was ${data.longestStreak} days. You've done it before — you can do it again! 💪
 
