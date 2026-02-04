@@ -3,15 +3,41 @@
 import React from "react";
 import CardSwap, { Card } from "../animations/CardSwap";
 import { Target, Brain, Calendar, Badge, Trophy, Zap } from "lucide-react";
+import Grainient from "../animations/Grainient";
 
 const Hero = () => {
   return (
-    <section className="min-h-screen flex items-center justify-center px-6 lg:mt-8 md:px-12 lg:px-24 pt-24 overflow-hidden">
-      {/* <div className="inline-block border-2 border-black bg-primary/10 px-4 py-1 mb-6 -rotate-1">
-        <span className="text-xs font-bold uppercase tracking-widest">
-          The Execution Agent is here.
-        </span>
-      </div> */}
+    <section className="relative min-h-screen flex items-center justify-center px-6 lg:pt-48 md:px-12 lg:px-24 pt-24 overflow-hidden">
+      {/* Grainient Background */}
+      <div className="absolute inset-0 -z-10">
+        <Grainient
+          color1="#0a0a0a"
+          color2="#52cbff"
+          color3="#0a0a0a"
+          timeSpeed={0}
+          colorBalance={0}
+          warpStrength={0.8}
+          warpFrequency={4}
+          warpSpeed={1.5}
+          warpAmplitude={40}
+          blendAngle={0}
+          blendSoftness={0.1}
+          rotationAmount={400}
+          noiseScale={2.57}
+          grainAmount={0.18}
+          grainScale={2}
+          grainAnimated={false}
+          contrast={1.3}
+          gamma={1}
+          saturation={0.9}
+          centerX={0}
+          centerY={0}
+          zoom={1}
+        />
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
+      </div>
+
       <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         {/* Text Section */}
         <section className="pt-2 pb-20 px-4 text-left">
