@@ -1,9 +1,28 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { OpikClientService } from '../opik/opik-client.service';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 
 @Injectable()
-export class TracingService {
-  constructor(private opikService: OpikClientService) {}
+export class TracingService implements OnModuleInit {
+  private opik: any;
+  private Opik: any;
+  private opikClient: any;
+
+  async onModuleInit() {
+    try {
+      // Dynamically import Opik ESM module
+      this.opik = await import('opik');
+      this.Opik = this.opik.Opik;
+      
+      // Initialize Opik client
+      this.opikClient = new this.Opik({
+        projectName: process.env.OPIK_PROJECT_NAME || 'rein-ml',
+      });
+      
+      console.log('✅ Opik tracing initialized successfully');
+    } catch (error) {
+      console.error('⚠️  Opik initialization failed:', error.message);
+      console.log('Tracing will be disabled');
+    }
+  }
 
   /**
    * Trace an LLM generation call
@@ -18,37 +37,31 @@ export class TracingService {
     },
     generateFn: () => Promise<string>,
   ): Promise<string> {
-    const trace = this.opikService.startTrace(`llm_${name}`, {
-      model: input.model,
-      temperature: input.temperature,
-      maxTokens: input.maxTokens,
-    });
+    if (!this.opikClient) {
+      return await generateFn();
+    }
 
-    const inputSpan = this.opikService.createSpan(trace, 'llm_input', {
-      prompt: input.prompt.substring(0, 500),
+    const trace = this.opikClient.trace({ name: `llm-${name}` });
+    const span = trace.span({
+      type: 'llm',
+      name,
+      input: { prompt: input.prompt },
+      metadata: {
+        model: input.model,
+        temperature: input.temperature,
+        maxTokens: input.maxTokens,
+      },
     });
 
     try {
       const result = await generateFn();
-
-      this.opikService.endSpan(inputSpan, {
-        prompt_tokens: this.estimateTokens(input.prompt),
-      });
-
-      const outputSpan = this.opikService.createSpan(trace, 'llm_output', {
-        output: result.substring(0, 500),
-      });
-
-      this.opikService.endSpan(outputSpan, {
-        output_tokens: this.estimateTokens(result),
-      });
-
-      this.opikService.endTrace(trace);
-
+      span.end({ output: { text: result } });
       return result;
     } catch (error) {
-      this.opikService.endTrace(trace);
+      span.end({ output: { error: error.message } });
       throw error;
+    } finally {
+      await trace.end();
     }
   }
 
@@ -60,32 +73,26 @@ export class TracingService {
     input: any,
     processFn: () => Promise<any>,
   ): Promise<any> {
-    const trace = this.opikService.startTrace(`preprocess_${name}`, {
-      operation: 'preprocessing',
-    });
+    if (!this.opikClient) {
+      return await processFn();
+    }
 
-    const inputSpan = this.opikService.createSpan(trace, 'preprocessing_input', {
+    const trace = this.opikClient.trace({ name: `preprocessing-${name}` });
+    const span = trace.span({
+      type: 'task',
+      name: 'preprocessing',
       input,
     });
 
     try {
       const result = await processFn();
-
-      this.opikService.endSpan(inputSpan, { processed: true });
-
-      const outputSpan = this.opikService.createSpan(
-        trace,
-        'preprocessing_output',
-        { result },
-      );
-
-      this.opikService.endSpan(outputSpan, { success: true });
-      this.opikService.endTrace(trace);
-
+      span.end({ output: result });
       return result;
     } catch (error) {
-      this.opikService.endTrace(trace);
+      span.end({ output: { error: error.message } });
       throw error;
+    } finally {
+      await trace.end();
     }
   }
 
@@ -106,36 +113,35 @@ export class TracingService {
       metrics?: Record<string, number>;
     }>,
   ): Promise<any> {
-    const trace = this.opikService.startTrace(`eval_${name}`, {
-      goalId: context.goalId,
-      userId: context.userId,
-      operation: 'evaluation',
+    if (!this.opikClient) {
+      return await evaluateFn();
+    }
+
+    const trace = this.opikClient.trace({ name: `evaluation-${name}` });
+    const span = trace.span({
+      type: 'task',
+      name: 'evaluation',
+      input: context.input,
+      metadata: {
+        goalId: context.goalId,
+        userId: context.userId,
+      },
     });
 
     try {
-      const evaluationResult = await evaluateFn();
-
-      const evalSpan = this.opikService.createSpan(trace, 'evaluation_result', {
-        score: evaluationResult.score,
-        reasoning: evaluationResult.reasoning,
+      const result = await evaluateFn();
+      span.end({ 
+        output: {
+          ...result,
+          expectedOutput: context.output,
+        },
       });
-
-      this.opikService.endSpan(evalSpan, evaluationResult.metrics);
-
-      // Log the score using trace.score
-      this.opikService.logEvaluation(
-        trace,
-        `eval_${name}`,
-        evaluationResult.score,
-        evaluationResult.reasoning,
-      );
-
-      this.opikService.endTrace(trace);
-
-      return evaluationResult;
+      return result;
     } catch (error) {
-      this.opikService.endTrace(trace);
+      span.end({ output: { error: error.message } });
       throw error;
+    } finally {
+      await trace.end();
     }
   }
 
@@ -151,45 +157,30 @@ export class TracingService {
       synced: any;
     }>,
   ): Promise<any> {
-    const trace = this.opikService.startTrace('goal_generation_pipeline', {
-      userId,
-      operation: 'end_to_end_pipeline',
+    if (!this.opikClient) {
+      return await executePipeline();
+    }
+
+    const trace = this.opikClient.trace({ 
+      name: 'goal-generation-pipeline',
+      metadata: { userId },
+    });
+    
+    const span = trace.span({
+      type: 'task',
+      name: 'goal-generation-pipeline',
+      input: { userInput },
     });
 
     try {
-      const pipelineResult = await executePipeline();
-
-      // Log each stage
-      const stages = [
-        { name: 'preprocessing', data: pipelineResult.preprocessed },
-        { name: 'generation', data: pipelineResult.generated },
-        { name: 'sync', data: pipelineResult.synced },
-      ];
-
-      for (const stage of stages) {
-        const stageSpan = this.opikService.createSpan(
-          trace,
-          `pipeline_${stage.name}`,
-          { stage: stage.name },
-        );
-
-        this.opikService.endSpan(stageSpan, stage.data);
-      }
-
-      this.opikService.endTrace(trace);
-
-      return pipelineResult;
+      const result = await executePipeline();
+      span.end({ output: result });
+      return result;
     } catch (error) {
-      this.opikService.endTrace(trace);
+      span.end({ output: { error: error.message } });
       throw error;
+    } finally {
+      await trace.end();
     }
-  }
-
-  /**
-   * Simple token estimation (rough approximation)
-   */
-  private estimateTokens(text: string): number {
-    // Rough approximation: ~4 chars per token
-    return Math.ceil(text.length / 4);
   }
 }

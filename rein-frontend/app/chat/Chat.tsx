@@ -389,6 +389,10 @@ export default function ChatPage() {
               if (integration.id === 'github') {
                 return { ...integration, connected: githubConnected };
               }
+              // Email is always connected since users authenticate with Google
+              if (integration.id === 'google-email') {
+                return { ...integration, connected: true };
+              }
               return integration;
             })
           );

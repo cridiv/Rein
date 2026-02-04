@@ -37,14 +37,17 @@ export class EmailService {
       tls: {
         rejectUnauthorized: false, // Accept self-signed certificates (for development)
       },
-      pool: true, // Use connection pooling
-      maxConnections: 5,
-      maxMessages: 100,
+      pool: false, // Disable pooling to prevent ECONNRESET errors
+      socketTimeout: 45000, // 45 seconds
+      connectionTimeout: 45000,
+      greetingTimeout: 30000,
+      logger: false,
+      debug: false,
     });
 
     // Add error handler to prevent crashes
     this.transporter.on('error', (error) => {
-      this.logger.error(`📧 SMTP connection error: ${error.message}`);
+      this.logger.warn(`📧 SMTP error (ignored): ${error.message}`);
     });
 
     this.fromEmail = this.configService.get<string>('SMTP_USER') || 'noreply@rein.app';
@@ -59,7 +62,8 @@ export class EmailService {
       await this.transporter.verify();
       this.logger.log('✅ Email service connected successfully');
     } catch (error) {
-      this.logger.error(`❌ Email service connection failed: ${error.message}`);
+      this.logger.warn(`⚠️  Email service connection failed: ${error.message}`);
+      this.logger.warn('📧 Email service will attempt to reconnect on first send');
     }
   }
 
@@ -87,6 +91,20 @@ export class EmailService {
         subject: options.subject,
         html: options.html,
         text: options.text,
+      }).catch((error) => {
+        // Handle connection reset errors gracefully
+        if (error.code === 'ECONNRESET' || error.code === 'ESOCKET') {
+          this.logger.warn(`📧 Connection reset during email send, retrying...`);
+          // Retry once
+          return this.transporter.sendMail({
+            from: `"${this.fromName}" <${this.fromEmail}>`,
+            to: options.to,
+            subject: options.subject,
+            html: options.html,
+            text: options.text,
+          });
+        }
+        throw error;
       });
 
       // Log successful send

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaService } from '../../prisma/prisma.service'; // Adjust path as needed
+import { PrismaService } from '../../prisma/prisma.service';
 import { EmailService } from './email.service';
 import { EmailType } from '../types/email.types';
 
