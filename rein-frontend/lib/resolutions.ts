@@ -17,6 +17,8 @@ export interface CreateResolutionData {
   goal: string;
   roadmap: any;
   suggestedPlatforms?: string[];
+  userEmail?: string;
+  userName?: string;
 }
 
 export interface TaskResource {
