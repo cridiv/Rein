@@ -41,7 +41,7 @@ const getStatusConfig = (connected: boolean) => {
       };
 };
 
-export default function IntegrationStatus({
+export default function IntegrationStatusX({
   integrations = [],
   onRefresh,
 }: IntegrationStatusProps) {

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import IntegrationStatus from "../IntegrationStatus";
+import IntegrationStatusX from "../IntegrationStatus";
 import QuickActions from "../QuickActions";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -149,8 +149,11 @@ export default function IntegrationsView({
                       </div>
                       <div>
                         <h4 className="font-bold">
-                          {integration.platform === 'github' ? 'GitHub' : 
-                           integration.platform === 'calendar' ? 'Google Calendar' : 'Slack'}
+                          {integration.platform === "github"
+                            ? "GitHub"
+                            : integration.platform === "calendar"
+                              ? "Google Calendar"
+                              : "Slack"}
                         </h4>
                         <p className="text-xs text-muted-foreground">
                           {integration.lastSync
@@ -168,7 +171,7 @@ export default function IntegrationsView({
                           : "bg-yellow-500/20 text-yellow-700 border-yellow-500"
                       }
                     >
-                      {isConnected ? 'connected' : 'pending'}
+                      {isConnected ? "connected" : "pending"}
                     </Badge>
                   </div>
 
@@ -177,13 +180,26 @@ export default function IntegrationsView({
                       variant="outline"
                       size="sm"
                       className="flex-1 border-2 border-black font-bold uppercase"
-                      onClick={() => integration.platform === 'calendar' ? onSyncPlatforms('calendar') : undefined}
-                      disabled={isSyncing || (integration.platform !== 'calendar')}
+                      onClick={() =>
+                        integration.platform === "calendar"
+                          ? onSyncPlatforms("calendar")
+                          : undefined
+                      }
+                      disabled={
+                        isSyncing || integration.platform !== "calendar"
+                      }
                     >
-                      {integration.platform === 'calendar' ? (
-                        <>{isSyncing ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />} Sync Roadmap</>
+                      {integration.platform === "calendar" ? (
+                        <>
+                          {isSyncing ? (
+                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                          )}{" "}
+                          Sync Roadmap
+                        </>
                       ) : (
-                        'Sync'
+                        "Sync"
                       )}
                     </Button>
                     <Button
@@ -227,7 +243,7 @@ export default function IntegrationsView({
 
         {/* Quick Actions & Status - 4 columns */}
         <div className="lg:col-span-4 space-y-6">
-          <IntegrationStatus integrations={integrations} />
+          <IntegrationStatusX integrations={integrations} />
           <QuickActions
             onLogCheckIn={onLogCheckIn}
             onSyncPlatforms={onSyncPlatforms}
