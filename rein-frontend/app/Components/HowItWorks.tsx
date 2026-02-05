@@ -16,6 +16,9 @@ import {
   Zap,
   TrendingUp,
 } from "lucide-react";
+import Image from "next/image";
+import CalenderSvg from "../svgs/CalenderSvg";
+import SlackSvg from "../svgs/SlackSvg";
 
 const HowItWorks = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,10 +43,14 @@ const HowItWorks = () => {
         <div className="relative bg-gradient-to-br from-primary/20 via-primary/5 to-transparent rounded-xl p-4 h-48 overflow-hidden">
           <div className="flex flex-col gap-3">
             <div className="flex gap-2 items-start">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                <span className="text-xs text-primary-foreground font-bold">
-                  R
-                </span>
+              <div className="w-8 h-8 rounded-full bg-transparent flex items-center justify-center flex-shrink-0">
+                <Image
+                  src="/rein-logo.svg"
+                  alt="Rein Logo"
+                  width={12}
+                  height={12}
+                  className="w-4 h-4"
+                />
               </div>
               <div className="bg-background/90 rounded-lg rounded-tl-none px-3 py-2 border border-border">
                 <p className="text-xs text-foreground">
@@ -59,8 +66,8 @@ const HowItWorks = () => {
               </div>
             </div>
             <div className="flex gap-2 items-start">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                <Brain className="w-4 h-4 text-primary-foreground" />
+              <div className="w-8 h-8 rounded-full bg-transparent flex items-center justify-center flex-shrink-0">
+                <Brain className="w-4 h-4 text-primary" />
               </div>
               <div className="bg-background/90 rounded-lg rounded-tl-none px-3 py-2 border border-border">
                 <p className="text-xs text-foreground">
@@ -197,10 +204,13 @@ const HowItWorks = () => {
         <div className="relative bg-gradient-to-br from-cyan-500/20 via-violet-500/5 to-transparent rounded-xl p-4 h-48 overflow-hidden">
           <div className="flex flex-col items-center justify-center h-full">
             <div className="relative flex items-center justify-center">
-              <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center z-10 shadow-lg shadow-primary/30">
-                <span className="text-xl font-black text-primary-foreground">
-                  R
-                </span>
+              <div className="w-14 h-14 rounded-full bg-transparent flex items-center justify-center z-10 shadow-lg shadow-primary/30">
+                <Image
+                  src="/rein-logo.svg"
+                  alt="Rein Logo"
+                  width={28}
+                  height={28}
+                />
               </div>
 
               <div className="absolute -left-16 top-1/2 -translate-y-1/2">
@@ -218,20 +228,14 @@ const HowItWorks = () => {
 
               <div className="absolute -right-16 top-1/2 -translate-y-1/2">
                 <div className="w-12 h-12 rounded-xl bg-background/90 border border-border flex items-center justify-center shadow-sm">
-                  <svg
-                    className="w-6 h-6 text-[#E01E5A]"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313z" />
-                  </svg>
+                  <SlackSvg className="w-6 h-6 text-[#4A154B]" />
                 </div>
                 <div className="absolute w-8 h-px bg-cyan-400/50 -left-2 top-1/2"></div>
               </div>
 
               <div className="absolute top-[-40px] left-1/2 -translate-x-1/2">
                 <div className="w-12 h-12 rounded-xl bg-background/90 border border-border flex items-center justify-center shadow-sm">
-                  <Calendar className="w-6 h-6 text-blue-400" />
+                  <CalenderSvg className="w-6 h-6 text-[#4285F4]" />
                 </div>
                 <div className="absolute h-6 w-px bg-cyan-400/50 -bottom-2 left-1/2"></div>
               </div>
@@ -445,29 +449,29 @@ const HowItWorks = () => {
     <section
       id="how-it-works"
       ref={containerRef}
-      className="relative py-24 px-6 md:px-12 lg:px-24 overflow-hidden"
+      className="relative py-24 px-6 md:px-12 lg:px-24 xl:px-32 2xl:px-40 overflow-hidden"
     >
       {/* Background accent */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-primary/5 rounded-full blur-3xl -z-10" />
 
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl xl:max-w-7xl 2xl:max-w-[1600px] mx-auto">
         {/* Section Header */}
         <motion.div
-          className="max-w-3xl mb-20"
+          className="max-w-3xl xl:max-w-4xl 2xl:max-w-5xl mb-20 xl:mb-28 2xl:mb-32"
           initial={{ opacity: 0, x: -30 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-12 h-px bg-primary"></div>
-            <span className="text-xs text-primary tracking-widest uppercase font-semibold">
+          <div className="flex items-center gap-2 xl:gap-3 mb-4 xl:mb-6">
+            <div className="w-12 xl:w-16 2xl:w-20 h-px bg-primary"></div>
+            <span className="text-xs xl:text-sm 2xl:text-base text-primary tracking-widest uppercase font-semibold">
               How It Works
             </span>
           </div>
 
           <h2
-            className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6"
+            className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-black leading-tight mb-6 xl:mb-8"
             style={{ letterSpacing: "-0.02em" }}
           >
             <span className="text-foreground">From Intention</span>
@@ -475,9 +479,9 @@ const HowItWorks = () => {
             <span className="text-primary">To Execution.</span>
           </h2>
 
-          <p className="text-base text-muted-foreground leading-relaxed max-w-2xl">
-            Seven simple steps to transform how you achieve your goals. Rein
-            handles the complexity so you can focus on what matters.
+          <p className="text-base xl:text-lg 2xl:text-xl text-muted-foreground leading-relaxed max-w-2xl xl:max-w-3xl 2xl:max-w-4xl">
+            Simple steps to transform how you achieve your goals. Rein handles
+            the complexity so you can focus on what matters.
           </p>
         </motion.div>
 
@@ -493,7 +497,7 @@ const HowItWorks = () => {
 
           {/* Steps */}
           <motion.div
-            className="relative space-y-12 md:space-y-24"
+            className="relative space-y-12 md:space-y-24 xl:space-y-32 2xl:space-y-40"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
@@ -502,7 +506,7 @@ const HowItWorks = () => {
             {steps.map((step, index) => (
               <motion.div
                 key={step.id}
-                className={`relative flex flex-col md:flex-row items-start gap-6 md:gap-12 ${
+                className={`relative flex flex-col md:flex-row items-start gap-6 md:gap-12 xl:gap-16 2xl:gap-20 ${
                   index % 2 === 0
                     ? "md:flex-row lg:flex-row"
                     : "md:flex-row-reverse lg:flex-row-reverse"
@@ -511,49 +515,55 @@ const HowItWorks = () => {
               >
                 {/* Step number indicator */}
                 <div
-                  className={`absolute left-0 md:left-1/2 md:-translate-x-1/2 z-10 flex items-center justify-center w-14 h-14 rounded-full ${step.bgColor} border-4 border-background shadow-lg`}
+                  className={`absolute left-0 md:left-1/2 md:-translate-x-1/2 z-10 flex items-center justify-center w-14 h-14 xl:w-16 xl:h-16 2xl:w-20 2xl:h-20 rounded-full ${step.bgColor} border-4 xl:border-[5px] 2xl:border-6 border-background shadow-lg`}
                 >
-                  <step.icon className={`w-6 h-6 ${step.color}`} />
+                  <step.icon
+                    className={`w-6 h-6 xl:w-7 xl:h-7 2xl:w-9 2xl:h-9 ${step.color}`}
+                  />
                 </div>
 
                 {/* Content */}
                 <div
                   className={`flex-1 ml-20 md:ml-0 ${
                     index % 2 === 0
-                      ? "md:pr-20 md:text-right"
-                      : "md:pl-20 md:text-left"
+                      ? "md:pr-20 xl:pr-24 2xl:pr-28 md:text-right"
+                      : "md:pl-20 xl:pl-24 2xl:pl-28 md:text-left"
                   }`}
                 >
                   <div
-                    className={`inline-flex items-center gap-2 mb-2 ${
+                    className={`inline-flex items-center gap-2 xl:gap-3 mb-2 xl:mb-3 ${
                       index % 2 === 0 ? "md:flex-row-reverse" : ""
                     }`}
                   >
-                    <span className={`text-sm font-bold ${step.color}`}>
+                    <span
+                      className={`text-sm xl:text-base 2xl:text-lg font-bold ${step.color}`}
+                    >
                       Step {step.id}
                     </span>
                     <ArrowRight
-                      className={`w-4 h-4 ${step.color} ${
+                      className={`w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 ${step.color} ${
                         index % 2 === 0 ? "md:rotate-180" : ""
                       }`}
                     />
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3">
+                  <h3 className="text-xl md:text-2xl xl:text-3xl 2xl:text-4xl font-bold text-foreground mb-3 xl:mb-4 2xl:mb-5">
                     {step.title}
                   </h3>
-                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-md">
+                  <p className="text-sm md:text-base xl:text-lg 2xl:text-xl text-muted-foreground leading-relaxed max-w-md xl:max-w-lg 2xl:max-w-xl">
                     {step.description}
                   </p>
                 </div>
 
                 {/* Visual */}
                 <div
-                  className={`flex-1 ml-20 md:ml-0 w-full max-w-sm ${
-                    index % 2 === 0 ? "md:pl-20" : "md:pr-20"
+                  className={`flex-1 ml-20 md:ml-0 w-full max-w-sm xl:max-w-md 2xl:max-w-lg ${
+                    index % 2 === 0
+                      ? "md:pl-20 xl:pl-24 2xl:pl-28"
+                      : "md:pr-20 xl:pr-24 2xl:pr-28"
                   }`}
                 >
                   <motion.div
-                    className={`rounded-xl border ${step.borderColor} bg-card overflow-hidden shadow-lg`}
+                    className={`rounded-xl xl:rounded-2xl border ${step.borderColor} bg-card overflow-hidden shadow-lg xl:shadow-xl`}
                     whileHover={{ scale: 1.02, y: -5 }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
@@ -567,27 +577,27 @@ const HowItWorks = () => {
 
         {/* Bottom CTA */}
         <motion.div
-          className="mt-24 text-center"
+          className="mt-24 xl:mt-32 2xl:mt-40 text-center"
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <div className="inline-flex flex-col items-center gap-4 p-8 rounded-2xl bg-card border border-primary/30 brutal-shadow">
-            <h3 className="text-2xl md:text-3xl font-bold text-foreground">
+          <div className="inline-flex flex-col items-center gap-4 xl:gap-6 p-8 xl:p-10 2xl:p-12 rounded-2xl xl:rounded-3xl bg-card border border-primary/30 brutal-shadow">
+            <h3 className="text-2xl md:text-3xl xl:text-4xl 2xl:text-5xl font-bold text-foreground">
               Ready to execute your goals?
             </h3>
-            <p className="text-muted-foreground max-w-md">
+            <p className="text-muted-foreground max-w-md xl:max-w-lg 2xl:max-w-xl text-base xl:text-lg 2xl:text-xl">
               Join thousands who have transformed their intentions into
               achievements with Rein.
             </p>
             <motion.button
-              className="brutal-button px-8 py-4 rounded-full flex items-center gap-2 text-lg font-semibold"
+              className="brutal-button px-8 py-4 xl:px-10 xl:py-5 2xl:px-12 2xl:py-6 rounded-full flex items-center gap-2 xl:gap-3 text-lg xl:text-xl 2xl:text-2xl font-semibold"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               Get Started Free
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5 xl:w-6 xl:h-6 2xl:w-7 2xl:h-7" />
             </motion.button>
           </div>
         </motion.div>

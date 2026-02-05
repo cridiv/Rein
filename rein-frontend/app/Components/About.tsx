@@ -248,38 +248,6 @@ const About = () => {
             </motion.div>
           ))}
         </motion.div>
-
-        {/* Bottom CTA */}
-        <motion.div
-          className="mt-16 text-center"
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          <motion.div
-            className="inline-flex flex-col sm:flex-row items-center gap-4 p-6 md:p-8 rounded-2xl bg-card border border-primary/30 brutal-shadow"
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <div className="text-left">
-              <h3 className="text-xl md:text-2xl font-bold text-foreground mb-1">
-                Ready to execute?
-              </h3>
-              <p className="text-muted-foreground text-sm md:text-base">
-                Join the beta and start achieving your resolutions today.
-              </p>
-            </div>
-            <motion.button
-              className="brutal-button px-6 py-3 rounded-full flex items-center gap-2 whitespace-nowrap"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Get Started
-              <ArrowRight className="w-4 h-4" />
-            </motion.button>
-          </motion.div>
-        </motion.div>
       </div>
     </section>
   );
