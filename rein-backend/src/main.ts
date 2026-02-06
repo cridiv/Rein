@@ -1,6 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
+
+app.use(json({ limit: '50mb' }));
+app.use(urlencoded({ limit: '50mb', extended: true }));
+
 // Global error handlers to prevent crashes from email service socket errors
 process.on('uncaughtException', (error: Error) => {
   // Only handle ECONNRESET errors from email service, let others crash
