@@ -41,13 +41,13 @@ export class ResolutionService {
    * Ensure user exists in database, create if not
    * Now accepts email and name to populate user data
    */
-  private async ensureUserExists(userId: string, email?: string, name?: string): Promise<void> {
+ private async ensureUserExists(userId: string, email?: string, name?: string): Promise<void> {
+  try {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
 
     if (!user) {
-      // Create user if doesn't exist
       this.logger.log(`Creating new user ${userId} with email: ${email || 'none'}`);
       await this.prisma.user.create({
         data: {
@@ -57,7 +57,6 @@ export class ResolutionService {
         },
       });
     } else if (email && !user.email) {
-      // Update user with email if they don't have one
       this.logger.log(`Updating user ${userId} with email: ${email}`);
       await this.prisma.user.update({
         where: { id: userId },
@@ -67,7 +66,15 @@ export class ResolutionService {
         },
       });
     }
+  } catch (error) {
+    // If unique constraint error on email, just log and continue
+    if (error.code === 'P2002') {
+      this.logger.warn(`User with email ${email} already exists. Continuing...`);
+      return;
+    }
+    throw error;
   }
+}
 
   async findAllByUser(userId: string) {
     console.log('Finding resolution for userId:', userId);
