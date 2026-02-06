@@ -2,6 +2,19 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/services/email.service';
 
+
+interface CreateResolutionDto {
+  userId: string;
+  email?: string;
+  name?: string;
+  title: string;
+  goal: string;
+  roadmap: any;
+  suggestedPlatforms?: string[];
+  startDate?: Date;
+  endDate?: Date;
+}
+
 @Injectable()
 export class ResolutionService {
   private readonly logger = new Logger(ResolutionService.name);
