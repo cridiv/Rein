@@ -3,6 +3,18 @@ import { ResolutionService } from './resolution.service';
 import { GoalScoringService } from '../analytics/goal-scoring.service';
 import { PrismaService } from '../prisma/prisma.service';
 
+interface CreateResolutionDto {
+  userId: string;
+  email?: string;
+  name?: string;
+  title: string;
+  goal: string;
+  roadmap: any;
+  suggestedPlatforms?: string[];
+  startDate?: Date;
+  endDate?: Date;
+}
+
 @Controller('resolution')
 export class ResolutionController {
   constructor(
