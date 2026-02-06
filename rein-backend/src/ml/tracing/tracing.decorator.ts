@@ -34,45 +34,34 @@ export function Trace(options?: {
       let trace;
 
       try {
+        // Prepare input data
+        const input = options?.captureArgs !== false
+          ? args.reduce((acc, arg, idx) => {
+              acc[`arg_${idx}`] = typeof arg === 'object' && arg !== null
+                ? JSON.stringify(arg).substring(0, 500)
+                : arg;
+              return acc;
+            }, {})
+          : undefined;
+
         trace = opikService.startTrace(traceName, {
           method: propertyKey,
           class: target.constructor.name,
           ...options?.metadata,
-        });
-
-        // Capture arguments
-        if (options?.captureArgs !== false) {
-          const input = args.map((arg) => {
-            if (typeof arg === 'object' && arg !== null) {
-              return JSON.stringify(arg).substring(0, 500); // Limit size
-            }
-            return arg;
-          });
-
-          const span = opikService.createSpan(trace, `input_${String(propertyKey)}`, {
-            args: input,
-          });
-          opikService.endSpan(span, { captured: true });
-        }
+        }, input);
 
         // Execute the original method
         const result = await originalMethod.apply(this, args);
 
-        // Capture result
-        if (options?.captureResult !== false && result) {
-          const output =
-            typeof result === 'object'
+        // Prepare output data
+        const output = options?.captureResult !== false && result
+          ? (typeof result === 'object' && result !== null
               ? JSON.stringify(result).substring(0, 500)
-              : result;
-
-          const span = opikService.createSpan(trace, `output_${String(propertyKey)}`, {
-            result: output,
-          });
-          opikService.endSpan(span, { captured: true });
-        }
+              : result)
+          : undefined;
 
         const duration = Date.now() - startTime;
-        opikService.endTrace(trace);
+        opikService.endTrace(trace, { result: output, duration });
 
         logger.debug(
           `Trace ${traceName} completed in ${duration}ms`,
@@ -80,8 +69,12 @@ export function Trace(options?: {
 
         return result;
       } catch (error) {
+        const duration = Date.now() - startTime;
         if (trace) {
-          opikService.endTrace(trace);
+          opikService.endTrace(trace, { 
+            error: error instanceof Error ? error.message : String(error),
+            duration,
+          });
         }
 
         logger.error(

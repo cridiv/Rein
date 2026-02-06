@@ -8,7 +8,7 @@ import AICoachMessage from "../AICoachMessage";
 interface OverviewViewProps {
   streak: number;
   progress: number;
-  healthStatus: "elite" | "good" | "moderate" | "at-risk";
+  healthStatus: "elite" | "strong" | "building" | "getting-started";
   resolution: {
     title: string;
     description: string;

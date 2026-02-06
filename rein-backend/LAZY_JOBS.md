@@ -165,12 +165,12 @@ npx prisma migrate dev --name add_job_schedules
 
 ### Check if jobs are registered
 ```bash
-curl http://localhost:5000/jobs/status
+curl https://rein-63fq.onrender.com/jobs/status
 ```
 
 ### Manually trigger a job
 ```bash
-curl -X POST http://localhost:5000/jobs/trigger/email-streak-reminders
+curl -X POST https://rein-63fq.onrender.com/jobs/trigger/email-streak-reminders
 ```
 
 ### Check server logs

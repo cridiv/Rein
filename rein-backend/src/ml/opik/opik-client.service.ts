@@ -61,10 +61,16 @@ export class OpikClientService implements OnModuleInit, OnModuleDestroy {
   /**
    * Start a trace for tracking a complete operation
    */
-  startTrace(name: string, metadata?: Record<string, any>): OpikTrace {
+  startTrace(name: string, metadata?: Record<string, any>, input?: Record<string, any>): OpikTrace {
     const client = this.getClient();
     return client.trace({
       name,
+      input: input
+        ? {
+            data: input,
+            timestamp: new Date().toISOString(),
+          }
+        : undefined,
       metadata: {
         ...metadata,
         timestamp: new Date().toISOString(),
@@ -102,9 +108,17 @@ export class OpikClientService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Log a completed trace
+   * Log output and complete a trace
    */
-  endTrace(trace: OpikTrace): OpikTrace {
+  endTrace(trace: OpikTrace, output?: any): OpikTrace {
+    trace.update({
+      output: output
+        ? {
+            data: output,
+            timestamp: new Date().toISOString(),
+          }
+        : undefined,
+    });
     return trace.end();
   }
 

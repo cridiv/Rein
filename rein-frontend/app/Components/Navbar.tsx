@@ -54,7 +54,7 @@ export function Navbar() {
     >
       <nav className="flex justify-between items-center gap-5 w-full max-w-7xl px-2 md:px-6 h-[3.5rem] mx-auto">
         {/* Logo */}
-        <Link href="/home" className="flex items-center gap-2 cursor-pointer">
+        <Link href="/" className="flex items-center gap-2 cursor-pointer">
           <div className="w-8 h-8 bg-transparent rounded-lg flex items-center justify-center">
             <Image
               src="/rein-logo.png"
