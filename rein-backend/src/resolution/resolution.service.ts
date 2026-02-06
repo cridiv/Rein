@@ -11,43 +11,49 @@ export class ResolutionService {
     private readonly emailService: EmailService,
   ) {}
 
-  async create(userId: string, title: string, goal: string, roadmap: any, suggestedPlatforms?: string[], userEmail?: string, userName?: string) {
-    // Ensure user exists in the database (with email if provided)
-    await this.ensureUserExists(userId, userEmail, userName);
+async create(createResolutionDto: CreateResolutionDto) {
+  const { userId, email, name, ...resolutionData } = createResolutionDto;
 
-    // Calculate start and end dates from roadmap
-    const { startDate, endDate } = this.extractDatesFromRoadmap(roadmap);
+  // Ensure user exists and get the actual userId to use
+  const actualUserId = await this.ensureUserExists(userId, email, name);
 
-    const resolution = await this.prisma.resolution.create({
-      data: {
-        userId,
-        title,
-        goal,
-        roadmap,
-        startDate,
-        endDate,
-        status: 'active',
-        suggestedPlatforms: suggestedPlatforms || ['calendar'],
-      },
-    });
+  // Create resolution with the actual userId
+  const resolution = await this.prisma.resolution.create({
+    data: {
+      ...resolutionData,
+      userId: actualUserId,
+    },
+  });
 
-    // ✅ Send welcome email for FIRST resolution
-    await this.sendWelcomeEmailIfFirst(userId, resolution);
+  // ✅ Send welcome email for FIRST resolution
+  await this.sendWelcomeEmailIfFirst(actualUserId, resolution);
 
-    return resolution;
-  }
+  return resolution;
+}
 
   /**
    * Ensure user exists in database, create if not
    * Now accepts email and name to populate user data
    */
- private async ensureUserExists(userId: string, email?: string, name?: string): Promise<void> {
+ private async ensureUserExists(userId: string, email?: string, name?: string): Promise<string> {
   try {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
 
     if (!user) {
+      // Check if email already exists in database
+      if (email) {
+        const existingEmailUser = await this.prisma.user.findUnique({
+          where: { email },
+        });
+        
+        if (existingEmailUser) {
+          this.logger.log(`User with email ${email} already exists with ID ${existingEmailUser.id}. Using existing user.`);
+          return existingEmailUser.id; // Return the existing user's ID
+        }
+      }
+
       this.logger.log(`Creating new user ${userId} with email: ${email || 'none'}`);
       await this.prisma.user.create({
         data: {
@@ -56,6 +62,7 @@ export class ResolutionService {
           name: name || null,
         },
       });
+      return userId;
     } else if (email && !user.email) {
       this.logger.log(`Updating user ${userId} with email: ${email}`);
       await this.prisma.user.update({
@@ -66,16 +73,21 @@ export class ResolutionService {
         },
       });
     }
+    
+    return userId;
   } catch (error) {
-    // If unique constraint error on email, just log and continue
     if (error.code === 'P2002') {
       this.logger.warn(`User with email ${email} already exists. Continuing...`);
-      return;
+      // Find and return the existing user's ID
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email },
+      });
+      return existingUser?.id || userId;
     }
     throw error;
   }
 }
-
+  
   async findAllByUser(userId: string) {
     console.log('Finding resolution for userId:', userId);
 
