@@ -38,7 +38,7 @@ const CtaCard = () => {
           className="brutal-button cursor-pointer px-8 py-4 xl:px-10 xl:py-5 2xl:px-12 2xl:py-6 rounded-full flex items-center gap-2 xl:gap-3 text-lg xl:text-xl 2xl:text-2xl font-semibold"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onclick={() => (window.location.href = "/signin")}
+          onClick={() => (window.location.href = "/signin")}
         >
           Get Started Free
           <ArrowRight className="w-5 h-5 xl:w-6 xl:h-6 2xl:w-7 2xl:h-7" />
