@@ -18,7 +18,7 @@
 
 ## The Problem
 
-Most New Year's resolutions fail — not from lack of motivation, but from three structural gaps:
+Most New Year's resolutions fail not from lack of motivation, but from three structural gaps:
 
 | Gap                   | Description                                                                                                              |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
